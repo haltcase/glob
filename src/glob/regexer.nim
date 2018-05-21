@@ -33,6 +33,10 @@ proc globToRegexString* (pattern: string, isDos = isDosDefault): string {.raises
     rgx = "^"
     i = -1
 
+  proc next (c: var char) =
+    inc i
+    c = check(pattern, i)
+
   while i < pattern.len - 1:
     inc i
     var c = pattern[i]
@@ -43,12 +47,12 @@ proc globToRegexString* (pattern: string, isDos = isDosDefault): string {.raises
       if i == pattern.len:
         raise newException(GlobSyntaxError, &"No character to escape ({pattern}, {i})")
 
-      let next = pattern[i + 1]
-      inc i
-      if next in globMetaChars or next in regexMetaChars:
+      let nextChar = check(pattern, i + 1)
+      if nextChar in globMetaChars or nextChar in regexMetaChars:
         rgx &= '\\'
 
-      rgx &= next
+      rgx &= nextChar
+      inc i
     of '/':
       if hasGlobstar: continue
 
@@ -64,48 +68,42 @@ proc globToRegexString* (pattern: string, isDos = isDosDefault): string {.raises
         # rgx &= "[[^/]&&["
 
       rgx &= c
+      next(c)
 
-      if check(pattern, i + 1) == '^':
-        # escape the regex negation character
-        rgx &= r"\^"
-        inc i
-      else:
-        case check(pattern, i + 1)
-        of '!': rgx &= '^'; inc(i, 2)
-        of '-': rgx &= '-'; inc(i, 2)
-        else: discard
+      case c
+      of '!': rgx &= '^'; next(c)
+      of '-': rgx &= '-'; next(c)
+      of '^': rgx &= r"\^"; next(c)
+      else: discard
 
       var
         hasRangeStart = false
         last = EOL
 
       while i < pattern.len:
-        c = pattern[i]
-        inc i
-
         if c == ']':
           break
 
         if c == '/' or (isDos and c == '\\'):
-          raise newException(GlobSyntaxError, &"Explicit 'name separator' in class ({pattern}, {i - 1})")
+          raise newException(GlobSyntaxError, &"Explicit 'name separator' in class ({pattern}, {i})")
 
         # TBD: how to specify ']' in a class?
-        if c == '\\' or (c == '&' and check(pattern, i) == '&'):
+        if c == '\\' or (c == '&' and check(pattern, i + 1) == '&'):
           # escape `\` and `&&` for regex class
           rgx &= '\\'
 
         rgx &= c
 
-        if c == '-' and check(pattern, i - 2) != '!':
+        if c == '-' and check(pattern, i - 1) != '!':
           if not hasRangeStart:
-            raise newException(GlobSyntaxError, &"Invalid range ({pattern}, {i - 1})")
+            raise newException(GlobSyntaxError, &"Invalid range ({pattern}, {i})")
 
-          c = check(pattern, i)
+          next(c)
           if c == EOL or c == ']':
             break
 
           if c.int < last.int:
-            raise newException(GlobSyntaxError, &"Cannot nest groups ({pattern}, {i - 3})")
+            raise newException(GlobSyntaxError, &"Cannot nest groups ({pattern}, {i - 2})")
 
           rgx &= c
           hasRangeStart = false
@@ -113,10 +111,11 @@ proc globToRegexString* (pattern: string, isDos = isDosDefault): string {.raises
           hasRangeStart = true
           last = c
 
+        next(c)
+
       if c != ']':
         raise newException(GlobSyntaxError, &"Missing ']' ({pattern}, {i})")
 
-      dec i
       # rgx &= "]]"
       rgx &= "]"
     of '{':
