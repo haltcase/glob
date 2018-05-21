@@ -1,0 +1,8 @@
+# ide configurations
+.c9
+.idea
+.vscode
+
+nimcache
+/tests
+/tests.exe
