@@ -90,6 +90,9 @@ suite "regex matching":
     check isMatchTest("src/file.{nim,js}", "src/file.java").not
     check isMatchTest("src/file.{nim,js}", "src/file.rs").not
 
+    expect GlobSyntaxError: discard globToRegexString("jell{o,y")
+    expect GlobSyntaxError: discard globToRegexString("*.{nims,{.nim}}")
+
   test "bracket expressions":
     check isMatchTest("[f]oo.html", "foo.html")
     check isMatchTest("[e-g]oo.html", "foo.html")
@@ -105,8 +108,15 @@ suite "regex matching":
     check isMatchTest("[]]", "]")
 
     expect GlobSyntaxError: discard globToRegexString("[]")
+    expect GlobSyntaxError: discard globToRegexString("*[a-z")
+    expect GlobSyntaxError: discard globToRegexString("*[a--z]")
+    expect GlobSyntaxError: discard globToRegexString("*[a--]")
 
     test "character classes (posix)":
+      expect GlobSyntaxError: discard globToRegexString("[[:alnum:")
+      expect GlobSyntaxError: discard globToRegexString("[[:alnum:]")
+      expect GlobSyntaxError: discard globToRegexString("[[:shoop:]]")
+
       test "alnum":
         check isMatchTest("[[:alnum:]].html", "a.html")
         check isMatchTest("[[:alnum:]].html", "1.html")
