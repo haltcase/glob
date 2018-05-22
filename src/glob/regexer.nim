@@ -45,7 +45,7 @@ proc getClassRegex (name: string): string =
 proc check (glob: string, i: int): char =
   if i < glob.len: glob[i] else: EOL
 
-proc globToRegexString* (pattern: string, isDos = isDosDefault): string {.raises([GlobSyntaxError]).} =
+proc globToRegexString* (pattern: string, isDos = isDosDefault): string =
   ## Parses the given ``pattern`` glob string and returns a regex string.
   ## Syntactic errors will cause a ``GlobSyntaxError`` to be raised.
   var
