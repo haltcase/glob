@@ -90,7 +90,7 @@ suite "regex matching":
     check isMatchTest("src/file.{nim,js}", "src/file.java").not
     check isMatchTest("src/file.{nim,js}", "src/file.rs").not
 
-  test "ranges":
+  test "bracket expressions":
     check isMatchTest("[f]oo.html", "foo.html")
     check isMatchTest("[e-g]oo.html", "foo.html")
     check isMatchTest("[abcde-g]oo.html", "foo.html")
@@ -99,10 +99,94 @@ suite "regex matching":
     check isMatchTest("[!a-e]oo.html", "foo.html")
     check isMatchTest("foo[-a-z]bar", "foo-bar")
     check isMatchTest("foo[!-]html", "foo.html")
-
     check isMatchTest("[f]oo.{[h]tml,class}", "foo.html")
     check isMatchTest("foo.{[a-z]tml,class}", "foo.html")
     check isMatchTest("foo.{[!a-e]tml,.class}", "foo.html")
+
+    test "character classes (posix)":
+      test "alnum":
+        check isMatchTest("[[:alnum:]].html", "a.html")
+        check isMatchTest("[[:alnum:]].html", "1.html")
+        check isMatchTest("[[:alnum:]].html", "_.html").not
+        check isMatchTest("[[:alnum:]].html", "=.html").not
+
+      test "alpha":
+        check isMatchTest("[[:alpha:]].html", "a.html")
+        check isMatchTest("[[:alpha:]].html", "1.html").not
+        check isMatchTest("[[:alpha:]].html", "_.html").not
+        check isMatchTest("[[:alpha:]].html", "=.html").not
+
+      test "digit":
+        check isMatchTest("[[:digit:]].html", "0.html")
+        check isMatchTest("[[:digit:]].html", "1.html")
+        check isMatchTest("[[:digit:]].html", "_.html").not
+        check isMatchTest("[[:digit:]].html", "=.html").not
+
+      test "upper":
+        check isMatchTest("[[:upper:]].nim", "A.nim")
+        check isMatchTest("[[:upper:]].nim", "Z.nim")
+        check isMatchTest("[[:upper:]].nim", "z.nim").not
+        check isMatchTest("[[:upper:]].nim", "_.nim").not
+        check isMatchTest("[[:upper:]].nim", "0.nim").not
+
+      test "lower":
+        check isMatchTest("[[:lower:]].nim", "a.nim")
+        check isMatchTest("[[:lower:]].nim", "z.nim")
+        check isMatchTest("[[:lower:]].nim", "Z.nim").not
+        check isMatchTest("[[:lower:]].nim", "_.nim").not
+        check isMatchTest("[[:lower:]].nim", "0.nim").not
+
+      test "xdigit":
+        check isMatchTest("[[:xdigit:]][[:xdigit:]]", "0A")
+        check isMatchTest("[[:xdigit:]][[:xdigit:]]", "0a")
+        check isMatchTest("[[:xdigit:]][[:xdigit:]]", "0_").not
+        check isMatchTest("[[:xdigit:]][[:xdigit:]]", "+a").not
+
+      test "blank":
+        check isMatchTest("[[:blank:]]", " ")
+        check isMatchTest("[[:blank:]]", "\t")
+        check isMatchTest("[[:blank:]]", "  ").not
+        check isMatchTest("[[:blank:]]", "+ ").not
+
+      test "punct":
+        check isMatchTest("[[:punct:]]", "=")
+        check isMatchTest("[[:punct:]]", "*")
+        check isMatchTest("[[:punct:]]", "}")
+        check isMatchTest("[[:punct:]][[:punct:]]", "%(")
+        check isMatchTest("[[:punct:]][[:punct:]][[:punct:]]", "*^#")
+        check isMatchTest("[[:punct:]]", "a").not
+        check isMatchTest("[[:punct:]]", "A").not
+
+      test "space":
+        check isMatchTest("[[:space:]]", "\v")
+        check isMatchTest("[[:space:]]", "\f")
+        check isMatchTest("[[:space:]]", "s").not
+        check isMatchTest("[[:space:]]", "=").not
+
+      test "ascii":
+        check isMatchTest("[[:ascii:]]", "\x00")
+        check isMatchTest("[[:ascii:]]", "\x7F")
+        check isMatchTest("[[:ascii:]]", "£").not
+        check isMatchTest("[[:ascii:]]", "©").not
+
+      test "cntrl":
+        check isMatchTest("[[:cntrl:]]", "\x1F")
+        check isMatchTest("[[:cntrl:]]", "\x00")
+        check isMatchTest("[[:cntrl:]]", "+").not
+        check isMatchTest("[[:cntrl:]]", "A").not
+
+      test "print":
+        check isMatchTest("[[:print:]]", "\x20")
+        check isMatchTest("[[:print:]]", "\x7E")
+        check isMatchTest("[[:print:]]", " ")
+        check isMatchTest("[[:print:]]", "\t").not
+        check isMatchTest("[[:print:]]", "\v").not
+
+      test "graph":
+        check isMatchTest("[[:graph:]]", "\x7E")
+        check isMatchTest("[[:graph:]]", "\x21")
+        check isMatchTest("[[:graph:]]", "\t").not
+        check isMatchTest("[[:graph:]]", "\v").not
 
   test "medium complexity":
     let pattern = "src/**/*.{nim,js}"
