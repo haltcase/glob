@@ -1320,10 +1320,9 @@ function main() {
 <tr><td><tt class="docutils literal"><span class="pre">[:blank:]</span></tt></td><td><tt class="docutils literal"><span class="pre">[ \t]</span></tt></td><td>space and TAB characters only</td></tr>
 <tr><td><tt class="docutils literal"><span class="pre">[:space:]</span></tt></td><td><tt class="docutils literal"><span class="pre">[ \t\n\r\f\v]</span></tt></td><td>blank (whitespace) characters</td></tr>
 <tr><td><tt class="docutils literal"><span class="pre">[:cntrl:]</span></tt></td><td><tt class="docutils literal"><span class="pre">[\x00-\x1F\x7F]</span></tt></td><td>control characters</td></tr>
-<tr><td><tt class="docutils literal"><span class="pre">[:cntrl:]</span></tt></td><td><tt class="docutils literal"><span class="pre">[!&quot;\#$%&amp;'()*+,-./:;&lt;=&gt;?@\[\]^_`{|}~]</span></tt></td><td>punctuation characters</td></tr>
 <tr><td><tt class="docutils literal"><span class="pre">[:ascii:]</span></tt></td><td><tt class="docutils literal"><span class="pre">[\x00-\x7F]</span></tt></td><td>ASCII characters</td></tr>
 <tr><td><tt class="docutils literal"><span class="pre">[:graph:]</span></tt></td><td><tt class="docutils literal"><span class="pre">[^ [:cntrl:]]</span></tt></td><td>graphic characters (all characters which have graphic representation)</td></tr>
-<tr><td><tt class="docutils literal"><span class="pre">[:punct:]</span></tt></td><td></td><td>punctuation (all graphic characters except letters and digits)</td></tr>
+<tr><td><tt class="docutils literal"><span class="pre">[:punct:]</span></tt></td><td><tt class="docutils literal"><span class="pre">[!&quot;\#$%&amp;'()*+,-./:;&lt;=&gt;?@\[\]^_`{|}~]</span></tt></td><td>punctuation (all graphic characters except letters and digits)</td></tr>
 <tr><td><tt class="docutils literal"><span class="pre">[:print:]</span></tt></td><td><tt class="docutils literal"><span class="pre">[[:graph] ]</span></tt></td><td>graphic characters and space</td></tr>
 </table>
 <h1><a class="toc-backref" id="examples" href="#examples">Examples</a></h1><p>For these examples let's imagine we have this file structure:</p>
@@ -1458,7 +1457,7 @@ Equivalent to <tt class="docutils literal"><span class="pre">walkGlobKinds</span
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small>Made with Nim. Generated: 2018-05-22 13:19:57 UTC</small>
+        <small>Made with Nim. Generated: 2018-05-22 13:34:00 UTC</small>
       </div>
     </div>
   </div>

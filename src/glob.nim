@@ -52,10 +52,9 @@ classes and their roughly equivalent regex values:
 ``[:blank:]``	       ``[ \t]``	                                  space and TAB characters only
 ``[:space:]``	       ``[ \t\n\r\f\v]``	                          blank (whitespace) characters
 ``[:cntrl:]``        ``[\x00-\x1F\x7F]``                          control characters
-``[:cntrl:]``	       ``[!"\#$%&'()*+,-./:;<=>?@\[\]^_`{|}~]``     punctuation characters
 ``[:ascii:]``        ``[\x00-\x7F]``                              ASCII characters
 ``[:graph:]``	       ``[^ [:cntrl:]]``	                          graphic characters (all characters which have graphic representation)
-``[:punct:]``                                                     punctuation (all graphic characters except letters and digits)
+``[:punct:]``	       ``[!"\#$%&'()*+,-./:;<=>?@\[\]^_`{|}~]``     punctuation (all graphic characters except letters and digits)
 ``[:print:]``	       ``[[:graph] ]``	                            graphic characters and space
 ==================   ==========================================   ======================================================================
 
