@@ -216,6 +216,8 @@ suite "regex matching":
     check isMatchTest("\\[foo*", "[foo].html")
     check isMatchTest("*\\].html", "[foo].html")
 
+    expect GlobSyntaxError: discard globToRegexString(r"foo\")
+
 suite "pattern walking / listing":
   test "yields expected files":
     let cleanup = createStructure("temp", @[

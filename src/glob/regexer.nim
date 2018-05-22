@@ -65,7 +65,7 @@ proc globToRegexString* (pattern: string, isDos = isDosDefault): string =
     case c
     of '\\':
       # escape special characters
-      if i == pattern.len:
+      if i + 1 == pattern.len:
         raise newException(GlobSyntaxError, &"No character to escape ({pattern}, {i})")
 
       let nextChar = check(pattern, i + 1)
