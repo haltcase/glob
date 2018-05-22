@@ -159,7 +159,7 @@ proc `$`* (glob: Glob): string =
 
 proc hasMagic* (str: string): bool =
   ## Returns ``true`` if the given pattern contains any of the special glob
-  ## characters ``*``, ``?``, ``[``, ``[``.
+  ## characters ``*``, ``?``, ``[``, ``{``.
   str.contains({'*', '?', '[', '{'})
 
 proc globToRegex* (pattern: string, isDos = isDosDefault): Regex =
