@@ -39,6 +39,7 @@ suite "globToRegex":
     check isEquiv("**", r"^(?:[^\/]*(?:\/|$))*$")
     check isEquiv("src/*.nim", r"^src/[^/]*\.nim$")
     check isEquiv("src/**/*.nim", r"^src/(?:[^\/]*(?:\/|$))*[^/]*\.nim$")
+    check isEquiv("*.nim", r"^[^/]*\.nim$")
 
     check isEquiv(r"\{foo*", r"^\{foo[^/]*$")
     check isEquiv(r"*\}.html", r"^[^/]*}\.html$")

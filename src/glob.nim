@@ -194,6 +194,9 @@ proc pathType (path: string): Option[PathComponent] =
     discard
 
 proc splitPattern (pattern: string): tuple[base: string, magic: string] =
+  if not pattern.contains(re"[^\\]\/"):
+    return ("", pattern)
+
   var head = pattern
   var tail: string
   while head.hasMagic:
