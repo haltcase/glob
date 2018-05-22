@@ -32,8 +32,26 @@ between ``/`` and ``\``. Even when on Windows platforms you should **not** use
 syntax. Instead, always use ``/`` as the path separator. This module will then
 use the correct separator when the glob is created.
 
-Character Classes
+Character classes
 #################
+
+Matching special characters
+---------------------------
+
+If you need to match some special characters like ``]`` or ``-`` inside a
+bracket expression, you'll need to use them in specific ways to match them
+literally.
+
+===========  =========  =========  =======================================================
+ character    special    literal    description
+===========  =========  =========  =======================================================
+``]``        ``[)}]]``  ``[]_.]``  must come first or is treated as closing bracket
+``-``        ``[_-=]``  ``[-_]``   must come first or last or is treated as a range
+``!``        ``[!<>]``  ``[<!>]``  must not come first or is treated as negation character
+===========  =========  =========  =======================================================
+
+POSIX classes
+-------------
 
 Within bracket expressions (``[]``) you can use POSIX character classes,
 which are basically named groups of characters. These are the available
@@ -57,7 +75,6 @@ classes and their roughly equivalent regex values:
 ``[:punct:]``	       ``[!"\#$%&'()*+,-./:;<=>?@\[\]^_`{|}~]``     punctuation (all graphic characters except letters and digits)
 ``[:print:]``	       ``[[:graph] ]``	                            graphic characters and space
 ==================   ==========================================   ======================================================================
-
 
 Examples
 ********

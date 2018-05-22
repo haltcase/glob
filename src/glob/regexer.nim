@@ -95,6 +95,7 @@ proc globToRegexString* (pattern: string, isDos = isDosDefault): string =
       of '!': rgx &= '^'; next(c)
       of '-': rgx &= '-'; next(c)
       of '^': rgx &= r"\^"; next(c)
+      of ']': rgx &= r"\]"; next(c)
       else: discard
 
       var
@@ -132,7 +133,6 @@ proc globToRegexString* (pattern: string, isDos = isDosDefault): string =
         if c == '/' or (isDos and c == '\\'):
           raise newException(GlobSyntaxError, &"Explicit 'name separator' in class ({pattern}, {i})")
 
-        # TBD: how to specify ']' in a class?
         if c == '\\' or (c == '&' and check(pattern, i + 1) == '&'):
           # escape `\` and `&&` for regex class
           rgx &= '\\'
