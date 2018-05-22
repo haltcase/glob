@@ -102,6 +102,9 @@ suite "regex matching":
     check isMatchTest("[f]oo.{[h]tml,class}", "foo.html")
     check isMatchTest("foo.{[a-z]tml,class}", "foo.html")
     check isMatchTest("foo.{[!a-e]tml,.class}", "foo.html")
+    check isMatchTest("[]]", "]")
+
+    expect GlobSyntaxError: discard globToRegexString("[]")
 
     test "character classes (posix)":
       test "alnum":
