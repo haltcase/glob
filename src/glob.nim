@@ -1,15 +1,15 @@
 ##[
-``glob`` is a cross-platform, pure Nim module for matching files against Unix style patterns.
-It supports creating patterns, testing file paths, and walking through directories to find
-matching files or directories. For example, the pattern ``src/**/*.nim`` will be *expanded*
-to return all files with a ``.nim`` extension in the ``src`` directory and any of its
-subdirectories.
+``glob`` is a cross-platform, pure Nim module for matching files against Unix
+style patterns. It supports creating patterns, testing file paths, and walking
+through directories to find matching files or directories. For example, the
+pattern ``src/**/*.nim`` will be *expanded* to return all files with a ``.nim``
+extension in the ``src`` directory and any of its subdirectories.
 
-It's similar to Python's `glob <https://docs.python.org/2/library/glob.html>`_ module but
-supports extended glob syntax like ``{}`` groups.
+It's similar to Python's `glob <https://docs.python.org/2/library/glob.html>`_
+module but supports extended glob syntax like ``{}`` groups.
 
-Note that while ``glob`` works on all platforms, the patterns it generates can be platform
-specific due to differing path separator characters.
+Note that while ``glob`` works on all platforms, the patterns it generates can
+be platform specific due to differing path separator characters.
 
 Syntax
 ******
@@ -26,11 +26,39 @@ Syntax
 ``\``    ``foo\*.js``     escape character (not path separator, even on Windows)
 =======  ===============  =============
 
-Any other characters are matched literally. Make special note of the difference between
-``/`` and ``\``. Even when on Windows platforms you should **not** use ``\`` as a path
-separator, since it is actually the escape character in glob syntax. Instead, always
-use ``/`` as the path separator. This module will then use the correct separator when
-the glob is created.
+Any other characters are matched literally. Make special note of the difference
+between ``/`` and ``\``. Even when on Windows platforms you should **not** use
+``\`` as a path separator, since it is actually the escape character in glob
+syntax. Instead, always use ``/`` as the path separator. This module will then
+use the correct separator when the glob is created.
+
+Character Classes
+#################
+
+Within bracket expressions (``[]``) you can use POSIX character classes,
+which are basically named groups of characters. These are the available
+classes and their roughly equivalent regex values:
+
+==================   ==========================================   ======================================================================
+ POSIX class	        similar to                                   meaning
+==================   ==========================================   ======================================================================
+``[:upper:]``	       ``[A-Z]``	                                  uppercase letters
+``[:lower:]``	       ``[a-z]``	                                  lowercase letters
+``[:alpha:]``	       ``[A-Za-z]``                                 upper- and lowercase letters
+``[:digit:]``	       ``[0-9]``	                                  digits
+``[:xdigit:]``	     ``[0-9A-Fa-f]``	                            hexadecimal digits
+``[:alnum:]``	       ``[A-Za-z0-9]``                              digits, upper- and lowercase letters
+``[:word:]``         ``[A-Za-z0-9_]``                             alphanumeric and underscore
+``[:blank:]``	       ``[ \t]``	                                  space and TAB characters only
+``[:space:]``	       ``[ \t\n\r\f\v]``	                          blank (whitespace) characters
+``[:cntrl:]``        ``[\x00-\x1F\x7F]``                          control characters
+``[:cntrl:]``	       ``[!"\#$%&'()*+,-./:;<=>?@\[\]^_`{|}~]``     punctuation characters
+``[:ascii:]``        ``[\x00-\x7F]``                              ASCII characters
+``[:graph:]``	       ``[^ [:cntrl:]]``	                          graphic characters (all characters which have graphic representation)
+``[:punct:]``                                                     punctuation (all graphic characters except letters and digits)
+``[:print:]``	       ``[[:graph] ]``	                            graphic characters and space
+==================   ==========================================   ======================================================================
+
 
 Examples
 ********
@@ -73,7 +101,6 @@ There are a few more extended glob features and other capabilities which aren't
 supported yet but will potentially be added in the future. This includes:
 
 - multiple patterns (something like ``glob(["*.nim", "!foo.nim"])``)
-- ``[[:alnum:]]``: named classes of characters (``:alnum:``, ``:space:``, ``:digit:``)
 - ``?(...patterns)``: match zero or one occurrences of the given patterns
 - ``*(...patterns)``: match zero or more occurrences of the given patterns
 - ``+(...patterns)``: match one or more occurrences of the given patterns
