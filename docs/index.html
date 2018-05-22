@@ -1233,8 +1233,10 @@ function main() {
   </div>
   <ul class="simple simple-toc" id="toc-list">
 <li><a class="reference" id="syntax_toc" href="#syntax">Syntax</a></li>
-<ul class="simple"><li><a class="reference" id="syntax-character-classes_toc" href="#syntax-character-classes">Character Classes</a></li>
-</ul><li><a class="reference" id="examples_toc" href="#examples">Examples</a></li>
+<ul class="simple"><li><a class="reference" id="syntax-character-classes_toc" href="#syntax-character-classes">Character classes</a></li>
+<ul class="simple"><li><a class="reference" id="character-classes-matching-special-characters_toc" href="#character-classes-matching-special-characters">Matching special characters</a></li>
+<li><a class="reference" id="character-classes-posix-classes_toc" href="#character-classes-posix-classes">POSIX classes</a></li>
+</ul></ul><li><a class="reference" id="examples_toc" href="#examples">Examples</a></li>
 <li><a class="reference" id="roadmap_toc" href="#roadmap">Roadmap</a></li>
 <li>
   <a class="reference reference-toplevel" href="#6" id="56">Imports</a>
@@ -1308,7 +1310,14 @@ function main() {
 <tr><td><tt class="docutils literal"><span class="pre">\</span></tt></td><td><tt class="docutils literal"><span class="pre">foo\*.js</span></tt></td><td>escape character (not path separator, even on Windows)</td></tr>
 </table><p>Any other characters are matched literally. Make special note of the difference between <tt class="docutils literal"><span class="pre">/</span></tt> and <tt class="docutils literal"><span class="pre">\</span></tt>. Even when on Windows platforms you should <strong>not</strong> use <tt class="docutils literal"><span class="pre">\</span></tt> as a path separator, since it is actually the escape character in glob syntax. Instead, always use <tt class="docutils literal"><span class="pre">/</span></tt> as the path separator. This module will then use the correct separator when the glob is created.</p>
 
-<h2><a class="toc-backref" id="syntax-character-classes" href="#syntax-character-classes">Character Classes</a></h2><p>Within bracket expressions (<tt class="docutils literal"><span class="pre">[]</span></tt>) you can use POSIX character classes, which are basically named groups of characters. These are the available classes and their roughly equivalent regex values:</p>
+<h2><a class="toc-backref" id="syntax-character-classes" href="#syntax-character-classes">Character classes</a></h2>
+<h3><a class="toc-backref" id="character-classes-matching-special-characters" href="#character-classes-matching-special-characters">Matching special characters</a></h3><p>If you need to match some special characters like <tt class="docutils literal"><span class="pre">]</span></tt> or <tt class="docutils literal"><span class="pre">-</span></tt> inside a bracket expression, you'll need to use them in specific ways to match them literally.</p>
+<table border="1" class="docutils"><tr><th>character</th><th>special</th><th>literal</th><th>description</th></tr>
+<tr><td><tt class="docutils literal"><span class="pre">]</span></tt></td><td><tt class="docutils literal"><span class="pre">[)}]]</span></tt></td><td><tt class="docutils literal"><span class="pre">[]_.]</span></tt></td><td>must come first or is treated as closing bracket</td></tr>
+<tr><td><tt class="docutils literal"><span class="pre">-</span></tt></td><td><tt class="docutils literal"><span class="pre">[_-=]</span></tt></td><td><tt class="docutils literal"><span class="pre">[-_]</span></tt></td><td>must come first or last or is treated as a range</td></tr>
+<tr><td><tt class="docutils literal"><span class="pre">!</span></tt></td><td><tt class="docutils literal"><span class="pre">[!&lt;&gt;]</span></tt></td><td><tt class="docutils literal"><span class="pre">[&lt;!&gt;]</span></tt></td><td>must not come first or is treated as negation character</td></tr>
+</table>
+<h3><a class="toc-backref" id="character-classes-posix-classes" href="#character-classes-posix-classes">POSIX classes</a></h3><p>Within bracket expressions (<tt class="docutils literal"><span class="pre">[]</span></tt>) you can use POSIX character classes, which are basically named groups of characters. These are the available classes and their roughly equivalent regex values:</p>
 <table border="1" class="docutils"><tr><th>POSIX class</th><th>similar to</th><th>meaning</th></tr>
 <tr><td><tt class="docutils literal"><span class="pre">[:upper:]</span></tt></td><td><tt class="docutils literal"><span class="pre">[A-Z]</span></tt></td><td>uppercase letters</td></tr>
 <tr><td><tt class="docutils literal"><span class="pre">[:lower:]</span></tt></td><td><tt class="docutils literal"><span class="pre">[a-z]</span></tt></td><td>lowercase letters</td></tr>
@@ -1388,7 +1397,7 @@ Converts a <tt class="docutils literal"><span class="pre">Glob</span></tt> objec
 </dd>
 <dt id="hasMagic"><a name="hasMagic,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">hasMagic</span><span class="Other">(</span><span class="Identifier">str</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
-Returns <tt class="docutils literal"><span class="pre">true</span></tt> if the given pattern contains any of the special glob characters <tt class="docutils literal"><span class="pre">*</span></tt>, <tt class="docutils literal"><span class="pre">?</span></tt>, <tt class="docutils literal"><span class="pre">[</span></tt>, <tt class="docutils literal"><span class="pre">[</span></tt>.
+Returns <tt class="docutils literal"><span class="pre">true</span></tt> if the given pattern contains any of the special glob characters <tt class="docutils literal"><span class="pre">*</span></tt>, <tt class="docutils literal"><span class="pre">?</span></tt>, <tt class="docutils literal"><span class="pre">[</span></tt>, <tt class="docutils literal"><span class="pre">{</span></tt>.
 
 </dd>
 <dt id="globToRegex"><a name="globToRegex,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">globToRegex</span><span class="Other">(</span><span class="Identifier">pattern</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">isDos</span> <span class="Other">=</span> <span class="Identifier">isDosDefault</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Regex</span> <span class="Other pragmabegin">{.</span><div class="pragma">
@@ -1457,7 +1466,7 @@ Equivalent to <tt class="docutils literal"><span class="pre">walkGlobKinds</span
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small>Made with Nim. Generated: 2018-05-22 13:34:00 UTC</small>
+        <small>Made with Nim. Generated: 2018-05-22 17:30:51 UTC</small>
       </div>
     </div>
   </div>
