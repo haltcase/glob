@@ -1,7 +1,6 @@
 import future
 import ospaths
 from os import createDir, removeDir, getCurrentDir
-from sequtils import mapIt
 from algorithm import sortedByIt
 
 import unittest

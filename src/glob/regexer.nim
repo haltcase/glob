@@ -5,7 +5,6 @@ it separately isn't necessary, it could be imported independently of the main
 ``glob`` package.
 ]##
 
-from ospaths import DirSep
 from strutils import spaces
 
 type GlobSyntaxError* = object of Exception

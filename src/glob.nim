@@ -140,8 +140,7 @@ supported yet but will potentially be added in the future. This includes:
 
 import os
 import options
-from ospaths import DirSep, isAbsolute, splitPath, `/`
-from sequtils import toSeq
+from ospaths import DirSep, splitPath, `/`
 from strutils import contains, endsWith, startsWith
 
 import regex
