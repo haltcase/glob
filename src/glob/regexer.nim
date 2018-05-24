@@ -103,7 +103,11 @@ proc globToRegexString* (pattern: string, isDos = isDosDefault): string =
         let kind = stack.pop
         case kind
         of '@': add("{1}")
-        of '!': add("[^/]*")
+        of '!':
+          if isDos:
+            add("[^\\]*")
+          else:
+            add("[^/]*")
         else: add(kind)
       else:
         add('\\' & c)
