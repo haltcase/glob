@@ -76,6 +76,23 @@ classes and their roughly equivalent regex values:
 ``[:print:]``	       ``[[:graph] ]``	                            graphic characters and space
 ==================   ==========================================   ======================================================================
 
+Extended pattern matching
+#########################
+
+``glob`` supports most of the extended pattern matching syntax found under
+bash's ``extglob`` flag:
+
+===================  =======================================================
+``?(...patterns)``   match zero or one occurrences of the given patterns
+``*(...patterns)``   match zero or more occurrences of the given patterns
+``+(...patterns)``   match one or more occurrences of the given patterns
+``@(...patterns)``   match one of the given patterns
+===================  =======================================================
+
+Note that the ``!(...patterns)`` form that allows for matching anything *except*
+the given patterns is not currently supported. This is a limitation in the regex
+backend.
+
 Examples
 ********
 
@@ -108,7 +125,8 @@ For these examples let's imagine we have this file structure:
 
 For more info on glob syntax see `this link <https://mywiki.wooledge.org/glob>`_
 for a good reference, although it references a few more extended features which
-aren't yet supported.
+aren't yet supported. As a cheatsheet, `this wiki <http://wiki.bash-hackers.org/syntax/pattern>`_
+might also be useful.
 
 Roadmap
 *******
@@ -117,11 +135,6 @@ There are a few more extended glob features and other capabilities which aren't
 supported yet but will potentially be added in the future. This includes:
 
 - multiple patterns (something like ``glob(["*.nim", "!foo.nim"])``)
-- ``?(...patterns)``: match zero or one occurrences of the given patterns
-- ``*(...patterns)``: match zero or more occurrences of the given patterns
-- ``+(...patterns)``: match one or more occurrences of the given patterns
-- ``@(...patterns)``: match one of the given patterns
-- ``!(...patterns)``: match anything *except* the given patterns
 
 ]##
 
