@@ -229,6 +229,43 @@ suite "regex matching":
 
     expect GlobSyntaxError: discard globToRegexString(r"foo\")
 
+  test "extended (?)":
+    check isMatchTest("?(fo[!qp]|qux)bar.nim", "foobar.nim")
+    check isMatchTest("?(fo[!qp]|qux)bar.nim", "quxbar.nim")
+    check isMatchTest("?(fo[!qp]|qux)bar.nim", "bar.nim")
+    check isMatchTest("?(fo[!qp]|qux)bar.nim", "fopbar.nim").not
+
+  test "extended (*)":
+    check isMatchTest("*(foo|ba[rt]).nim", "foo.nim")
+    check isMatchTest("*(foo|ba[rt]).nim", "bat.nim")
+    check isMatchTest("*(foo|ba[rt]).nim", "foobat.nim")
+    check isMatchTest("*(foo|ba[rt]).nim", "baz.nim").not
+    check isMatchTest("*(foo|ba[rt]).nim", "fun.nim").not
+
+  test "extended (!) - currently unsupported":
+    # currently unsupported in regex implementation
+    expect GlobSyntaxError: discard globToRegexString("!(boo).txt")
+
+    # check isMatchTest("!(boo).nim", "foo.nim")
+    # check isMatchTest("!(foo|baz)bar.nim", "buzbar.nim")
+    # check isMatchTest("!bar.nim", "!bar.nim")
+    # check isMatchTest("!({foo,bar})baz.nim", "notbaz.nim")
+    # check isMatchTest("!({foo,bar})baz.nim", "foobaz.nim").not
+
+  test "extended (+)":
+    check isMatchTest("+foo.nim", "+foo.nim")
+    check isMatchTest("+(foo).nim", "foo.nim")
+    check isMatchTest("+(foo).nim", "foofoo.nim")
+    check isMatchTest("+(foo).nim", "fop.nim").not
+    check isMatchTest("+(foo).nim", ".nim").not
+
+  test "extended (@)":
+    check isMatchTest("@foo.nim", "@foo.nim")
+    check isMatchTest("@(foo).nim", "foo.nim")
+    check isMatchTest("@(foo).nim", "foofoo.nim").not
+    check isMatchTest("@(1|2).nim", "1.nim")
+    check isMatchTest("@(1|2).nim", "12.nim").not
+
 suite "pattern walking / listing":
   test "yields expected files":
     let cleanup = createStructure("temp", @[

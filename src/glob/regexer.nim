@@ -5,8 +5,8 @@ it separately isn't necessary, it could be imported independently of the main
 ``glob`` package.
 ]##
 
-import strformat
 from ospaths import DirSep
+from strutils import spaces
 
 type GlobSyntaxError* = object of Exception
   ## Raised if the parsing of a glob pattern fails.
@@ -42,21 +42,33 @@ proc getClassRegex (name: string): string =
   for item in charClasses:
     if item[0] == name: return item[1]
 
-proc check (glob: string, i: int): char =
-  if i < glob.len: glob[i] else: EOL
+template fail (message, pattern: string, index: int) =
+  let errLines = 2.spaces & pattern & "\p" & (2 + index).spaces & "^" & "\p\p"
+  raise newException(GlobSyntaxError, message & "\p\p" & errLines)
 
 proc globToRegexString* (pattern: string, isDos = isDosDefault): string =
   ## Parses the given ``pattern`` glob string and returns a regex string.
   ## Syntactic errors will cause a ``GlobSyntaxError`` to be raised.
   var
+    stack: seq[char] = @[]
     hasGlobstar = false
+    inRange = false
     inGroup = false
     rgx = "^"
     i = -1
 
-  proc next (c: var char) =
+  template peek (i: int): char =
+    if i >= 0 and i < pattern.len: pattern[i] else: EOL
+
+  template add (str: string | char) =
+    rgx &= str
+
+  template next (c: var char) =
     inc i
-    c = check(pattern, i)
+    c = peek(i)
+
+  template isNext (cmp: char): bool =
+    peek(i + 1) == cmp
 
   while i < pattern.len - 1:
     inc i
@@ -66,147 +78,161 @@ proc globToRegexString* (pattern: string, isDos = isDosDefault): string =
     of '\\':
       # escape special characters
       if i + 1 == pattern.len:
-        raise newException(GlobSyntaxError, &"No character to escape ({pattern}, {i})")
+        fail("No character to escape", pattern, i)
 
-      let nextChar = check(pattern, i + 1)
+      let nextChar = peek(i + 1)
       if nextChar in globMetaChars or nextChar in regexMetaChars:
-        rgx &= '\\'
+        add('\\')
 
-      rgx &= nextChar
+      add(nextChar)
       inc i
     of '/':
       if hasGlobstar: continue
 
       if isDos:
-        rgx &= r"\\"
+        add(r"\\")
       else:
-        rgx &= c
+        add(c)
+    of '(', '|':
+      if stack.len > 0:
+        add(c)
+      else:
+        add('\\' & c)
+    of ')':
+      if stack.len > 0:
+        add(c)
+        let kind = stack.pop
+        case kind
+        of '@': add("{1}")
+        of '!': add("[^/]*")
+        else: add(kind)
+      else:
+        add('\\' & c)
+    of '+':
+      if isNext('('):
+        stack.add(c)
+      else:
+        add('\\' & c)
+    of '@':
+      if isNext('('):
+        stack.add(c)
+      else:
+        add(c)
+    of '!':
+      if inRange:
+        add('^')
+      elif isNext('('):
+        fail("Negated patterns are currently not supported", pattern, i + 1)
+        # stack.add(c)
+        # add("(?!")
+        # inc i
+      else:
+        add('\\' & c)
+    of '?':
+      if isNext('('):
+        stack.add(c)
+      elif isDos:
+        add(r"[^\\]")
+      else:
+        add("[^/]")
     of '[':
-      # don't match name separator in class
-      # if isDos:
-        # rgx &= r"[[^\\]&&["
-      # else:
-        # rgx &= "[[^/]&&["
+      let nextChar = peek(i + 1)
+      if nextChar in {'!', '-', '^', ']'}:
+        add(c)
+        case nextChar
+        of '!': add('^')
+        of '-': add('-')
+        of '^': add(r"\^")
+        of ']': add(r"\]")
+        else: discard
 
-      rgx &= c
-      next(c)
+        inc i
+        inRange = true
+        continue
 
-      case c
-      of '!': rgx &= '^'; next(c)
-      of '-': rgx &= '-'; next(c)
-      of '^': rgx &= r"\^"; next(c)
-      of ']': rgx &= r"\]"; next(c)
-      else: discard
+      # character classes
+      if inRange:
+        if nextChar != ':':
+          fail("Cannot nest groups", pattern, i - 2)
 
-      var
-        hasRangeStart = false
-        last = EOL
+        inc(i, 2)
+        c = peek(i)
 
-      while i < pattern.len:
-        if c == ']':
-          break
-
-        # character classes
-        if c == '[' and check(pattern, i + 1) == ':':
-          inc(i, 2) # move past '[:'
-          c = check(pattern, i)
-
-          var name = ""
-          while c != ':':
-            if c == EOL or c == ']':
-              break
-            name &= c
-            next(c)
-
-          if check(pattern, i + 1) != ']':
-            raise newException(GlobSyntaxError, &"Missing ']' after class ({pattern}, {i})")
-
-          let classRgx = getClassRegex(name)
-          if classRgx == "":
-            raise newException(GlobSyntaxError, &"Unknown class name '{name}' ({pattern}, {i})")
-
-          rgx &= classRgx
-          inc(i, 2) # move past ':]'
-          c = check(pattern, i)
-          continue
-
-        if c == '/' or (isDos and c == '\\'):
-          raise newException(GlobSyntaxError, &"Explicit 'name separator' in class ({pattern}, {i})")
-
-        if c == '\\' or (c == '&' and check(pattern, i + 1) == '&'):
-          # escape `\` and `&&` for regex class
-          rgx &= '\\'
-
-        rgx &= c
-
-        if c == '-' and check(pattern, i - 1) != '!':
-          if not hasRangeStart:
-            raise newException(GlobSyntaxError, &"Invalid range ({pattern}, {i})")
-
+        var name = ""
+        while c notin {':', EOL, ']'}:
+          name &= c
           next(c)
-          if c == EOL or c == ']':
-            break
 
-          if c.int < last.int:
-            raise newException(GlobSyntaxError, &"Cannot nest groups ({pattern}, {i - 2})")
+        if not isNext(']'):
+          fail("Missing ']' after class", pattern, i)
 
-          rgx &= c
-          hasRangeStart = false
-        else:
-          hasRangeStart = true
-          last = c
+        let classRgx = getClassRegex(name)
+        if classRgx == "":
+          fail("Unknown class name '{name}'", pattern, i)
 
-        next(c)
+        add(classRgx)
+        inc i
+        continue
 
-      if c != ']':
-        raise newException(GlobSyntaxError, &"Missing ']' ({pattern}, {i})")
+      add(c)
+      inRange = true
+    of ']':
+      inRange = false
+      add(c)
+    of '-':
+      add(c)
 
-      # rgx &= "]]"
-      rgx &= "]"
+      if inRange:
+        let prevChar = peek(i - 1)
+        let nextChar = peek(i + 1)
+        if nextChar == '-' or prevChar.int > nextChar.int:
+          fail("Invalid range", pattern, i)
     of '{':
       if inGroup:
-        raise newException(GlobSyntaxError, &"Cannot nest groups ({pattern}, {i})")
+        fail("Cannot nest groups", pattern, i)
 
-      rgx &= "(?:(?:"
+      add("(?:(?:")
       inGroup = true
     of '}':
       if inGroup:
-        rgx &= "))"
+        add("))")
         inGroup = false
       else:
-        rgx &= '}'
+        add('}')
     of ',':
       if inGroup:
-        rgx &= ")|(?:"
+        add(")|(?:")
       else:
-        rgx &= ','
+        add(',')
     of '*':
-      if check(pattern, i + 1) == '*':
+      if isNext('('):
+        stack.add(c)
+        continue
+
+      if isNext('*'):
         # crosses directory boundaries
         hasGlobstar = true
         if isDos:
-          rgx &= r"(?:[^\\]*(?:\\|$))*"
+          add(r"(?:[^\\]*(?:\\|$))*")
         else:
-          rgx &= r"(?:[^\/]*(?:\/|$))*"
+          add(r"(?:[^\/]*(?:\/|$))*")
         inc i
       else:
         # within directory boundary
         if isDos:
-          rgx &= r"[^\\]*"
+          add(r"[^\\]*")
         else:
-          rgx &= "[^/]*"
-    of '?':
-      if isDos:
-        rgx &= r"[^\\]"
-      else:
-        rgx &= "[^/]"
+          add("[^/]*")
     else:
       if c in regexMetaChars:
-        rgx &= '\\'
+        add('\\')
 
-      rgx &= c
+      add(c)
+
+  if inRange:
+    fail("Missing ']'", pattern, i)
 
   if inGroup:
-    raise newException(GlobSyntaxError, &"Missing '}}' ({pattern}, {i})")
+    fail("Missing '}'", pattern, i)
 
   result = rgx & '$'
