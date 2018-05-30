@@ -157,40 +157,30 @@ type
     pattern*: string
     regexStr*: string
     regex*: Regex
-    ## Represents a compiled glob pattern and its backing regex.
+    base*: string
+    magic*: string
+    ## Represents a compiled glob pattern and its backing regex. Also stores
+    ## the glob's ``base`` & ``magic`` components as per the
+    ## `splitPattern proc <#splitPattern,string>`_.
 
   GlobResult* =
     tuple[path: string, kind: PathComponent]
-    ## The type returned by the ``walkGlobKinds`` iterator, containing
-    ## the item's ``path`` and its ``kind`` - ie. ``pcFile``, ``pcDir``.
+    ## The type yielded by the `walkGlobKinds iterator <#walkGlobKinds.i,string,string>`_,
+    ## containing the item's ``path`` and its ``kind`` - ie. ``pcFile``, ``pcDir``.
 
-proc `$`* (glob: Glob): string =
-  ## Converts a ``Glob`` object to its string representation.
-  ## Useful for using ``echo glob`` directly.
-  glob.pattern
+  PatternStems* =
+    tuple[base: string, magic: string]
+    ## The type returned by `splitPattern <#splitPattern,string>`_ where
+    ## ``base`` contains the leading non-magic path components and ``magic``
+    ## contains any path segments containing or following special glob
+    ## characters.
 
 proc hasMagic* (str: string): bool =
-  ## Returns ``true`` if the given pattern contains any of the special glob
-  ## characters ``*``, ``?``, ``[``, ``{``.
-  str.contains({'*', '?', '[', '{'})
-
-proc globToRegex* (pattern: string, isDos = isDosDefault): Regex =
-  ## Converts a string glob pattern to a regex pattern.
-  globToRegexString(pattern, isDos).toPattern
-
-proc glob* (pattern: string, isDos = isDosDefault): Glob =
-  ## Constructs a new ``Glob`` object from the given ``pattern``.
-  let rgx = globToRegexString(pattern, isDos)
-  result = Glob(pattern: pattern, regexStr: rgx, regex: rgx.toPattern)
-
-proc matches* (input: string, glob: Glob, isDos = isDosDefault): bool =
-  ## Returns ``true`` if ``input`` is a match for the given ``glob`` object.
-  input.contains(glob.regex)
-
-proc matches* (input, pattern: string; isDos = isDosDefault): bool =
-  ## Constructs a ``Glob`` object from the given ``pattern`` and returns ``true``
-  ## if ``input`` is a match.
-  input.contains(globToRegex(pattern, isDos))
+  ## Returns ``true`` if the given string is glob-like, ie. if it contains any
+  ## of the special characters ``*``, ``?``, ``[``, ``{`` or an ``extglob``
+  ## which is one of the characters ``?``, ``!``, ``@``, ``+``, or ``*``
+  ## followed by ``(``.
+  str.contains({'*', '?', '[', '{'}) or str.contains(re"[?!@+]\(")
 
 proc toRelative (path, dir: string): string =
   if path.startsWith(dir):
@@ -205,8 +195,24 @@ proc pathType (path: string): Option[PathComponent] =
   except:
     discard
 
-proc splitPattern (pattern: string): tuple[base: string, magic: string] =
-  if not pattern.contains(re"[^\\]\/"):
+proc `$`* (glob: Glob): string =
+  ## Converts a `Glob <#Glob>`_ object to its string representation.
+  ## Useful for using ``echo glob`` directly.
+  glob.pattern
+
+proc globToRegex* (pattern: string, isDos = isDosDefault): Regex =
+  ## Converts a string glob pattern to a regex pattern.
+  globToRegexString(pattern, isDos).toPattern
+
+proc splitPattern* (pattern: string): PatternStems =
+  ## Splits the given pattern into two parts: the ``base`` which is the part
+  ## containing no special glob characters and the ``magic`` which includes
+  ## any path segments containing or following special glob characters.
+  ##
+  ## When ``pattern`` is not glob-like, ie. ``pattern.hasMagic == false``,
+  ## it will be considered a literal matcher and the entire pattern will
+  ## be returned as ``magic``, while ``base`` will be the empty string ``""``.
+  if not pattern.hasMagic or not pattern.contains(re"[^\\]\/"):
     return ("", pattern)
 
   var head = pattern
@@ -214,11 +220,32 @@ proc splitPattern (pattern: string): tuple[base: string, magic: string] =
   while head.hasMagic:
     (head, tail) = splitPath(head)
 
-  result = (head, pattern[head.len + 1..<pattern.len])
+  let start = if head.len == 0: head.len else: head.len + 1
+  result = (head, pattern[start..<pattern.len])
 
-# TODO: accept Glob objects as well as pattern strings
+proc glob* (pattern: string, isDos = isDosDefault): Glob =
+  ## Constructs a new `Glob <#Glob>`_ object from the given ``pattern``.
+  let rgx = globToRegexString(pattern, isDos)
+  let (base, magic) = pattern.splitPattern
+  result = Glob(
+    pattern: pattern,
+    regexStr: rgx,
+    regex: rgx.toPattern,
+    base: base,
+    magic: magic
+  )
+
+proc matches* (input: string, glob: Glob): bool =
+  ## Returns ``true`` if ``input`` is a match for the given ``glob`` object.
+  input.contains(glob.regex)
+
+proc matches* (input, pattern: string; isDos = isDosDefault): bool =
+  ## Constructs a `Glob <#Glob>`_ object from the given ``pattern`` and returns
+  ## ``true`` if ``input`` is a match. Shortcut for ``matches(input, glob(pattern, isDos))``.
+  input.contains(globToRegex(pattern, isDos))
+
 iterator walkGlobKinds* (
-  pattern: string,
+  pattern: string | Glob,
   root = "",
   relative = true,
   expandDirs = true,
@@ -240,15 +267,13 @@ iterator walkGlobKinds* (
   ## Hidden files and directories are not yielded by default but can be included
   ## by setting ``includeHidden = true``. The same goes for directories and the
   ## ``includeDirs = true`` parameter.
-  var dir =
-    if root == "": getCurrentDir()
-    else: root
+  var
+    dir = if root == "": getCurrentDir() else: root
+    matchPattern = when pattern is Glob: pattern.pattern else: pattern
+    proceed = matchPattern.hasMagic
 
-  var matchPattern = pattern
-
-  var proceed = pattern.hasMagic
   if not proceed:
-    let kind = pattern.pathType
+    let kind = matchPattern.pathType
     if not kind.isNone:
       case kind.get()
       of pcDir, pcLinkToDir:
@@ -257,19 +282,24 @@ iterator walkGlobKinds* (
           matchPattern &= "/**"
       else:
         yield (
-          (if relative: pattern.toRelative(dir) else: pattern),
+          (if relative: matchPattern.toRelative(dir) else: matchPattern),
           kind.get()
         )
 
-  let (base, magic) = matchPattern.splitPattern
-  dir = dir / base
-  matchPattern = magic
+  var base: string
+  when pattern is Glob:
+    dir = dir / pattern.base
+    base = pattern.base
+    matchPattern = pattern.magic
+  else:
+    (base, matchPattern) = splitPattern(matchPattern)
+    dir = dir / base
 
   var yieldFilter = {pcFile}
   if includeDirs: yieldFilter.incl(pcDir)
 
   if proceed:
-    let matcher = matchPattern.glob
+    let matcher = when pattern is Glob: pattern.magic else: matchPattern.glob
     for path in dir.walkDirRec(yieldFilter):
       let info = path.getFileInfo
       let rel = path.toRelative(dir)
@@ -278,30 +308,31 @@ iterator walkGlobKinds* (
         if path.isHidden and not includeHidden: continue
         yield ((if relative: base / rel else: path), info.kind)
 
-# TODO: accept Glob objects as well as pattern strings
 iterator walkGlob* (
-  pattern: string,
+  pattern: string | Glob,
   root = "",
   relative = true,
   expandDirs = true,
   includeHidden = false,
   includeDirs = false
 ): string =
-  ## Equivalent to ``walkGlobKinds`` but rather than yielding a ``GlobResult`` it
-  ## yields only the ``path`` of the item, ignoring its ``kind``.
+  ## Equivalent to `walkGlobKinds <#walkGlobKinds.i,string,string>`_ but rather
+  ## than yielding a `GlobResult <#GlobResult>`_ it yields only the ``path`` of the item,
+  ## ignoring its ``kind``.
   for path, _ in walkGlobKinds(pattern, root, relative, expandDirs, includeHidden, includeDirs):
     yield path
 
-# TODO: accept Glob objects as well as pattern strings
 proc listGlob* (
-  pattern: string,
+  pattern: string | Glob,
   root = "",
   relative = true,
   expandDirs = true,
   includeHidden = false,
   includeDirs = false
 ): seq[string] =
-  ## Returns a list of all the files matching ``pattern``.
+  ## Returns a list of all the file system items matching ``pattern``. See
+  ## the documentation for `walkGlobKinds <#walkGlobKinds.i,string,string>`_
+  ## for more info.
   accumulateResult(walkGlob(pattern, root, relative, expandDirs, includeHidden, includeDirs))
 
 export regexer

@@ -45,6 +45,34 @@ suite "globToRegex":
     check isEquiv(r"\[foo*", r"^\[foo[^/]*$")
     check isEquiv(r"*\].html", r"^[^/]*\]\.html$")
 
+suite "procs accept both string & glob":
+  test "matches":
+    check "src/dir/foo.nim".matches("src/**/*.nim", false)
+    check "src/dir/foo.nim".matches(glob("src/**/*.nim", false))
+
+  test "listGlob":
+    # listGlob uses `walkGlob` and therefore `walkGlobKinds` under the hood
+    # so if it works, those underlying procs should also work
+
+    let cleanup = createStructure("temp", @[
+      "deep" / "dir" / "file.nim",
+      "not_as" / "deep.jpg",
+      "not_as" / "deep.nim",
+      "shallow.nim"
+    ])
+
+    const expected = @[
+      "temp" / "deep" / "dir" / "file.nim",
+      "temp" / "not_as" / "deep.jpg",
+      "temp" / "not_as" / "deep.nim",
+      "temp" / "shallow.nim"
+    ]
+
+    check seqsEqual(listGlob("temp/**/*.{jpg,nim}"), expected)
+    check seqsEqual(listGlob(glob("temp/**/*.{jpg,nim}")), expected)
+
+    cleanup()
+
 suite "regex matching":
   test "basic":
     check isMatchTest("literal", "literal")
@@ -324,3 +352,35 @@ suite "pattern walking / listing":
       ])
 
     cleanup()
+
+suite "utility procs":
+  test "glob":
+    let patternString = "src/**/*.nim"
+    let g = glob("src/**/*.nim", false)
+    check g.pattern == patternString
+    check g.base == "src"
+    check g.magic == "**/*.nim"
+    check g.regexStr == r"^src/(?:[^\/]*(?:\/|$))*[^/]*\.nim$"
+    check "src/foo.nim".contains(g.regex)
+    check "src/dir/foo.nim".contains(g.regex)
+
+  test "hasMagic":
+    check "".hasMagic.not
+    check "literal-match.html".hasMagic.not
+    check "*".hasMagic
+    check "**".hasMagic
+    check "**/*.nim".hasMagic
+    check "[!f]oo.nim".hasMagic
+    check "foo.{nim,js}".hasMagic
+    check "?(a|b).nim".hasMagic
+    check "*(a|b).nim".hasMagic
+    check "!(a|b).nim".hasMagic
+    check "+(a|b).nim".hasMagic
+    check "@(a|b).nim".hasMagic
+
+  test "splitPattern":
+    check "".splitPattern == ("", "")
+    check "*".splitPattern == ("", "*")
+    check "**/*.nim".splitPattern == ("", "**/*.nim")
+    check "literal-match.html".splitPattern == ("", "literal-match.html")
+    check "src/deep/dir/[[:digit:]]*.{png,svg}".splitPattern == ("src/deep/dir", "[[:digit:]]*.{png,svg}")
