@@ -295,18 +295,30 @@ iterator walkGlobKinds* (
     (base, matchPattern) = splitPattern(matchPattern)
     dir = dir / base
 
-  var yieldFilter = {pcFile}
-  if includeDirs: yieldFilter.incl(pcDir)
-
   if proceed:
-    let matcher = when pattern is Glob: pattern.magic else: matchPattern.glob
-    for path in dir.walkDirRec(yieldFilter):
-      let info = path.getFileInfo
-      let rel = path.toRelative(dir)
+    let matcher = matchPattern.glob
+    let isRec = matchPattern.contains("**")
 
-      if rel.matches(matcher):
-        if path.isHidden and not includeHidden: continue
-        yield ((if relative: base / rel else: path), info.kind)
+    var stack = @[dir]
+    while stack.len > 0:
+      let subdir = stack.pop
+      for kind, path in walkDir(subdir):
+        let rel = path.toRelative(dir)
+
+        case kind
+        of pcDir, pcLinkToDir:
+          if (
+            rel.matches(matcher) and
+            includeDirs and
+            (not path.isHidden or includeHidden)
+          ):
+            yield ((if relative: base / rel else: path), kind)
+
+          if isRec: stack.add(path)
+        of pcFile, pcLinkToFile:
+          if path.isHidden and not includeHidden: continue
+          if rel.matches(matcher):
+            yield ((if relative: base / rel else: path), kind)
 
 iterator walkGlob* (
   pattern: string | Glob,
