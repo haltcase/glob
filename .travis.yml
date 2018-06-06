@@ -23,18 +23,21 @@ install:
       rm -rf csources
       bin/nim c koch
       ./koch boot -d:release
+      ./koch tools
     else
       cd nim-$BRANCH
       git fetch origin
       if ! git merge FETCH_HEAD | grep "Already up-to-date"; then
         bin/nim c koch
         ./koch boot -d:release
+        ./koch tools
       fi
     fi
     cd ..
 before_script:
   - export PATH="nim-$BRANCH/bin${PATH:+:$PATH}"
 script:
+  - nimble install -y
   - nim c -r tests.nim
 cache:
   directories:
