@@ -1,8 +1,8 @@
 language: c
 
 env:
-  # build and test against the master and devel branches of Nim
-  - BRANCH=master
+  # test against both stable & devel
+  - BRANCH=stable
   - BRANCH=devel
 
 cache:
@@ -12,12 +12,11 @@ cache:
 
 matrix:
   allow_failures:
-    # ignore failures when building against the devel Nim branch
     - env: BRANCH=devel
   fast_finish: true
 
 install:
-  - export CHOOSENIM_CHOOSE_VERSION="#$BRANCH"
+  - export CHOOSENIM_CHOOSE_VERSION=$BRANCH
   - |
       curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
       sh init.sh -y
