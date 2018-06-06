@@ -1,4 +1,4 @@
-# glob &middot; ![nimble](https://img.shields.io/badge/available%20on-nimble-yellow.svg?style=flat-square) ![license](https://img.shields.io/github/license/citycide/glob.svg?style=flat-square)
+# glob &middot; ![nimble](https://img.shields.io/badge/available%20on-nimble-yellow.svg?style=flat-square) ![license](https://img.shields.io/github/license/citycide/glob.svg?style=flat-square) [![Travis CI](https://travis-ci.com/citycide/glob.svg?branch=master)](https://travis-ci.com/citycide/glob)
 
 > Match file paths against Unix style patterns called _globs_.
 
