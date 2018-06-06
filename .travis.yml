@@ -36,10 +36,9 @@ install:
     cd ..
 before_script:
   - export PATH="nim-$BRANCH/bin${PATH:+:$PATH}"
-  - export PATH=~/.nimble/bin:$PATH
 script:
   - nimble install -y
-  - nim c -r tests.nim
+  - nimble test
 cache:
   directories:
     - nim-master
