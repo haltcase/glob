@@ -1,45 +1,29 @@
-# modified from https://github.com/nim-lang/Nim/wiki/TravisCI
 language: c
+
 env:
   # build and test against the master and devel branches of Nim
   - BRANCH=master
   - BRANCH=devel
-compiler:
-  - gcc
+
+cache:
+  directories:
+    - "$HOME/.nimble"
+    - "$HOME/.choosenim"
+
 matrix:
   allow_failures:
     # ignore failures when building against the devel Nim branch
     - env: BRANCH=devel
   fast_finish: true
+
 install:
+  - export CHOOSENIM_CHOOSE_VERSION="#$BRANCH"
   - |
-    if [ ! -x nim-$BRANCH/bin/nim ]; then
-      git clone -b $BRANCH --depth 1 git://github.com/nim-lang/nim nim-$BRANCH/
-      cd nim-$BRANCH
-      git clone --depth 1 git://github.com/nim-lang/csources csources/
-      cd csources
-      sh build.sh
-      cd ..
-      rm -rf csources
-      bin/nim c koch
-      ./koch boot -d:release
-      ./koch tools
-    else
-      cd nim-$BRANCH
-      git fetch origin
-      if ! git merge FETCH_HEAD | grep "Already up-to-date"; then
-        bin/nim c koch
-        ./koch boot -d:release
-        ./koch tools
-      fi
-    fi
-    cd ..
-before_script:
-  - export PATH="nim-$BRANCH/bin${PATH:+:$PATH}"
+      curl https://nim-lang.org/choosenim/init.sh -sSf > init.sh
+      sh init.sh -y
+  - export PATH=$HOME/.nimble/bin:$PATH
+  - nimble refresh -y
+
 script:
   - nimble install -y
-  - nimble test
-cache:
-  directories:
-    - nim-master
-    - nim-devel
+  - nimble test -y
