@@ -199,6 +199,9 @@ proc `$`* (glob: Glob): string =
   ## Useful for using ``echo glob`` directly.
   glob.pattern
 
+proc maybeJoin (p1, p2: string): string =
+  if p2.isAbsolute: p2 else: p1 / p2
+
 proc globToRegex* (pattern: string, isDos = isDosDefault): Regex =
   ## Converts a string glob pattern to a regex pattern.
   globToRegexString(pattern, isDos).toPattern
@@ -287,12 +290,12 @@ iterator walkGlobKinds* (
 
   var base: string
   when pattern is Glob:
-    dir = dir / pattern.base
+    dir = maybeJoin(dir, pattern.base)
     base = pattern.base
     matchPattern = pattern.magic
   else:
     (base, matchPattern) = splitPattern(matchPattern)
-    dir = dir / base
+    dir = maybeJoin(dir, base)
 
   if proceed:
     let matcher = matchPattern.glob
