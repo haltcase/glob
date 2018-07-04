@@ -194,11 +194,6 @@ proc pathType (path: string): Option[PathComponent] =
   except:
     discard
 
-proc `$`* (glob: Glob): string =
-  ## Converts a `Glob <#Glob>`_ object to its string representation.
-  ## Useful for using ``echo glob`` directly.
-  glob.pattern
-
 proc maybeJoin (p1, p2: string): string =
   if p2.isAbsolute: p2 else: p1 / p2
 
