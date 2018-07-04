@@ -364,6 +364,22 @@ suite "utility procs":
     check "src/foo.nim".contains(g.regex)
     check "src/dir/foo.nim".contains(g.regex)
 
+    test "absolute paths (unix)":
+      let patternString = "/home/cc/dev/nim/**/*.nim"
+      let g = glob(patternString, false)
+      check g.pattern == patternString
+      check g.base == "/home/cc/dev/nim"
+      check g.magic == "**/*.nim"
+      check g.regexStr == "^/home/cc/dev/nim/(?:[^\\/]*(?:\\/|$))*[^/]*\\.nim$"
+
+    test "absolute paths (windows)":
+      let patternString = "C:/Users/cc/dev/nim/**/*.nim"
+      let g = glob(patternString, true)
+      check g.pattern == patternString
+      check g.base == "C:/Users/cc/dev/nim"
+      check g.magic == "**/*.nim"
+      check g.regexStr == r"^C:\\Users\\cc\\dev\\nim\\(?:[^\\]*(?:\\|$))*[^\\]*\.nim$"
+
   test "hasMagic":
     check "".hasMagic.not
     check "literal-match.html".hasMagic.not
