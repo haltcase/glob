@@ -284,7 +284,7 @@ iterator walkGlobKinds* (
           matchPattern &= "/**"
       else:
         yield (
-          (if relative: matchPattern.toRelative(dir) else: matchPattern),
+          (if relative: matchPattern.toRelative(dir) else: matchPattern).unixToNativePath,
           kind.get()
         )
 
@@ -314,13 +314,13 @@ iterator walkGlobKinds* (
             includeDirs and
             (not path.isHidden or includeHidden)
           ):
-            yield ((if relative: base / rel else: path), kind)
+            yield ((if relative: base / rel else: path).unixToNativePath, kind)
 
           if isRec: stack.add(path)
         of pcFile, pcLinkToFile:
           if path.isHidden and not includeHidden: continue
           if rel.matches(matcher):
-            yield ((if relative: base / rel else: path), kind)
+            yield ((if relative: base / rel else: path).unixToNativePath, kind)
 
 iterator walkGlob* (
   pattern: string | Glob,
