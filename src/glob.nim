@@ -344,5 +344,6 @@ proc listGlob* (
   ## for more info.
   accumulateResult(walkGlob(pattern, root, relative, expandDirs, includeHidden, includeDirs))
 
+export PathComponent
 export regexer
 export regex
