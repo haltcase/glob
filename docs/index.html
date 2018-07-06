@@ -1259,6 +1259,8 @@ function main() {
     title="GlobResult = tuple[path: string, kind: PathComponent]"><wbr />Glob<wbr />Result<span class="attachedType" style="visibility:hidden"></span></a></li>
   <li><a class="reference" href="#PatternStems"
     title="PatternStems = tuple[base: string, magic: string]"><wbr />Pattern<wbr />Stems<span class="attachedType" style="visibility:hidden"></span></a></li>
+  <li><a class="reference" href="#GlobFilter"
+    title="GlobFilter = proc (path: string; kind: PathComponent): bool"><wbr />Glob<wbr />Filter<span class="attachedType" style="visibility:hidden"></span></a></li>
 
   </ul>
 </li>
@@ -1267,8 +1269,6 @@ function main() {
   <ul class="simple simple-toc-section">
       <li><a class="reference" href="#hasMagic,string"
     title="hasMagic(str: string): bool"><wbr />has<wbr />Magic<span class="attachedType" style="visibility:hidden"></span></a></li>
-  <li><a class="reference" href="#$,Glob"
-    title="`$`(glob: Glob): string"><wbr />`$`<span class="attachedType" style="visibility:hidden">Glob</span></a></li>
   <li><a class="reference" href="#globToRegex,string"
     title="globToRegex(pattern: string; isDos = isDosDefault): Regex"><wbr />glob<wbr />To<wbr />Regex<span class="attachedType" style="visibility:hidden"></span></a></li>
   <li><a class="reference" href="#splitPattern,string"
@@ -1279,21 +1279,21 @@ function main() {
     title="matches(input: string; glob: Glob): bool"><wbr />matches<span class="attachedType" style="visibility:hidden">Glob</span></a></li>
   <li><a class="reference" href="#matches,string,string"
     title="matches(input, pattern: string; isDos = isDosDefault): bool"><wbr />matches<span class="attachedType" style="visibility:hidden"></span></a></li>
-  <li><a class="reference" href="#listGlob,,string"
+  <li><a class="reference" href="#listGlob,,string,GlobFilter"
     title="listGlob(pattern: string | Glob; root = &quot;&quot;; relative = true; expandDirs = true;
-         includeHidden = false; includeDirs = false): seq[string]"><wbr />list<wbr />Glob<span class="attachedType" style="visibility:hidden">Glob</span></a></li>
+         includeHidden = false; includeDirs = false; filter: GlobFilter = nil): seq[string]"><wbr />list<wbr />Glob<span class="attachedType" style="visibility:hidden">Glob</span></a></li>
 
   </ul>
 </li>
 <li>
   <a class="reference reference-toplevel" href="#15" id="65">Iterators</a>
   <ul class="simple simple-toc-section">
-      <li><a class="reference" href="#walkGlobKinds.i,,string"
+      <li><a class="reference" href="#walkGlobKinds.i,,string,GlobFilter"
     title="walkGlobKinds(pattern: string | Glob; root = &quot;&quot;; relative = true; expandDirs = true;
-              includeHidden = false; includeDirs = false): GlobResult"><wbr />walk<wbr />Glob<wbr />Kinds<span class="attachedType" style="visibility:hidden">Glob</span></a></li>
-  <li><a class="reference" href="#walkGlob.i,,string"
+              includeHidden = false; includeDirs = false; filter: GlobFilter = nil): GlobResult"><wbr />walk<wbr />Glob<wbr />Kinds<span class="attachedType" style="visibility:hidden">Glob</span></a></li>
+  <li><a class="reference" href="#walkGlob.i,,string,GlobFilter"
     title="walkGlob(pattern: string | Glob; root = &quot;&quot;; relative = true; expandDirs = true;
-         includeHidden = false; includeDirs = false): string"><wbr />walk<wbr />Glob<span class="attachedType" style="visibility:hidden">Glob</span></a></li>
+         includeHidden = false; includeDirs = false; filter: GlobFilter = nil): string"><wbr />walk<wbr />Glob<span class="attachedType" style="visibility:hidden">Glob</span></a></li>
 
   </ul>
 </li>
@@ -1375,7 +1375,7 @@ function main() {
   <div class="section" id="6">
 <h1><a class="toc-backref" href="#6">Imports</a></h1>
 <dl class="item">
-<a class="reference external" href="os.html">os</a>, <a class="reference external" href="options.html">options</a>, <a class="reference external" href="ospaths.html">ospaths</a>, <a class="reference external" href="strutils.html">strutils</a>, <a class="reference external" href="regex.html">regex</a>, <a class="reference external" href="glob/regexer.html">glob/regexer</a>
+<a class="reference external" href="os.html">os</a>, <a class="reference external" href="options.html">options</a>, <a class="reference external" href="strutils.html">strutils</a>, <a class="reference external" href="regex.html">regex</a>, <a class="reference external" href="glob/regexer.html">glob/regexer</a>
 </dl></div>
 <div class="section" id="7">
 <h1><a class="toc-backref" href="#7">Types</a></h1>
@@ -1401,6 +1401,13 @@ The type yielded by the <a class="reference external" href="#walkGlobKinds.i,str
 The type returned by <a class="reference external" href="#splitPattern,string">splitPattern</a> where <tt class="docutils literal"><span class="pre">base</span></tt> contains the leading non-magic path components and <tt class="docutils literal"><span class="pre">magic</span></tt> contains any path segments containing or following special glob characters.
 
 </dd>
+<dt id="GlobFilter"><a name="GlobFilter"></a><pre><span class="Identifier">GlobFilter</span> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">path</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">kind</span><span class="Other">:</span> <span class="Identifier">PathComponent</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span></pre></dt>
+<dd>
+<p>Signature for procs that can be passed to <a class="reference external" href="#listGlob,,string">listGlob</a> or the iterators to skip files or directories or to selectively prevent directory recursion.</p>
+<p>Returning <tt class="docutils literal"><span class="pre">false</span></tt> will skip the item. If the path is a directory, it will not be traversed into even when the pattern is recursive.</p>
+
+
+</dd>
 
 </dl></div>
 <div class="section" id="12">
@@ -1409,11 +1416,6 @@ The type returned by <a class="reference external" href="#splitPattern,string">s
 <dt id="hasMagic"><a name="hasMagic,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">hasMagic</span><span class="Other">(</span><span class="Identifier">str</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
 Returns <tt class="docutils literal"><span class="pre">true</span></tt> if the given string is glob-like, ie. if it contains any of the special characters <tt class="docutils literal"><span class="pre">*</span></tt>, <tt class="docutils literal"><span class="pre">?</span></tt>, <tt class="docutils literal"><span class="pre">[</span></tt>, <tt class="docutils literal"><span class="pre">{</span></tt> or an <tt class="docutils literal"><span class="pre">extglob</span></tt> which is one of the characters <tt class="docutils literal"><span class="pre">?</span></tt>, <tt class="docutils literal"><span class="pre">!</span></tt>, <tt class="docutils literal"><span class="pre">@</span></tt>, <tt class="docutils literal"><span class="pre">+</span></tt>, or <tt class="docutils literal"><span class="pre">*</span></tt> followed by <tt class="docutils literal"><span class="pre">(</span></tt>.
-
-</dd>
-<dt id="$"><a name="$,Glob"></a><pre><span class="Keyword">proc</span> <span class="Identifier">`$`</span><span class="Other">(</span><span class="Identifier">glob</span><span class="Other">:</span> <span class="Identifier">Glob</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
-<dd>
-Converts a <a class="reference external" href="#Glob">Glob</a> object to its string representation. Useful for using <tt class="docutils literal"><span class="pre">echo glob</span></tt> directly.
 
 </dd>
 <dt id="globToRegex"><a name="globToRegex,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">globToRegex</span><span class="Other">(</span><span class="Identifier">pattern</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">isDos</span> <span class="Other">=</span> <span class="Identifier">isDosDefault</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Regex</span> <span class="Other pragmabegin">{.</span><div class="pragma">
@@ -1446,8 +1448,9 @@ Returns <tt class="docutils literal"><span class="pre">true</span></tt> if <tt c
 Constructs a <a class="reference external" href="#Glob">Glob</a> object from the given <tt class="docutils literal"><span class="pre">pattern</span></tt> and returns <tt class="docutils literal"><span class="pre">true</span></tt> if <tt class="docutils literal"><span class="pre">input</span></tt> is a match. Shortcut for <tt class="docutils literal"><span class="pre">matches(input, glob(pattern, isDos))</span></tt>.
 
 </dd>
-<dt id="listGlob"><a name="listGlob,,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">listGlob</span><span class="Other">(</span><span class="Identifier">pattern</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Operator">|</span> <span class="Identifier">Glob</span><span class="Other">;</span> <span class="Identifier">root</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span> <span class="Identifier">relative</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">;</span> <span class="Identifier">expandDirs</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">;</span>
-             <span class="Identifier">includeHidden</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">;</span> <span class="Identifier">includeDirs</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span></pre></dt>
+<dt id="listGlob"><a name="listGlob,,string,GlobFilter"></a><pre><span class="Keyword">proc</span> <span class="Identifier">listGlob</span><span class="Other">(</span><span class="Identifier">pattern</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Operator">|</span> <span class="Identifier">Glob</span><span class="Other">;</span> <span class="Identifier">root</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span> <span class="Identifier">relative</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">;</span> <span class="Identifier">expandDirs</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">;</span>
+             <span class="Identifier">includeHidden</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">;</span> <span class="Identifier">includeDirs</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">;</span> <span class="Identifier">filter</span><span class="Other">:</span> <span class="Identifier">GlobFilter</span> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span>
+    <span class="Identifier">string</span><span class="Other">]</span></pre></dt>
 <dd>
 Returns a list of all the file system items matching <tt class="docutils literal"><span class="pre">pattern</span></tt>. See the documentation for <a class="reference external" href="#walkGlobKinds.i,string,string">walkGlobKinds</a> for more info.
 
@@ -1457,18 +1460,20 @@ Returns a list of all the file system items matching <tt class="docutils literal
 <div class="section" id="15">
 <h1><a class="toc-backref" href="#15">Iterators</a></h1>
 <dl class="item">
-<dt id="walkGlobKinds"><a name="walkGlobKinds.i,,string"></a><pre><span class="Keyword">iterator</span> <span class="Identifier">walkGlobKinds</span><span class="Other">(</span><span class="Identifier">pattern</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Operator">|</span> <span class="Identifier">Glob</span><span class="Other">;</span> <span class="Identifier">root</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span> <span class="Identifier">relative</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">;</span>
-                      <span class="Identifier">expandDirs</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">;</span> <span class="Identifier">includeHidden</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">;</span> <span class="Identifier">includeDirs</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">GlobResult</span></pre></dt>
+<dt id="walkGlobKinds"><a name="walkGlobKinds.i,,string,GlobFilter"></a><pre><span class="Keyword">iterator</span> <span class="Identifier">walkGlobKinds</span><span class="Other">(</span><span class="Identifier">pattern</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Operator">|</span> <span class="Identifier">Glob</span><span class="Other">;</span> <span class="Identifier">root</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span> <span class="Identifier">relative</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">;</span>
+                      <span class="Identifier">expandDirs</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">;</span> <span class="Identifier">includeHidden</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">;</span> <span class="Identifier">includeDirs</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">;</span>
+                      <span class="Identifier">filter</span><span class="Other">:</span> <span class="Identifier">GlobFilter</span> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">GlobResult</span></pre></dt>
 <dd>
 <p>Iterates over all the paths within the scope of the given glob <tt class="docutils literal"><span class="pre">pattern</span></tt>, yielding all those that match. <tt class="docutils literal"><span class="pre">root</span></tt> defaults to the current working directory (by using <tt class="docutils literal"><span class="pre">os.getCurrentDir</span></tt>).</p>
 <p>Returned paths are relative to <tt class="docutils literal"><span class="pre">root</span></tt> by default but <tt class="docutils literal"><span class="pre">relative = false</span></tt> will yield absolute paths instead.</p>
 <p>Directories in the glob pattern are expanded by default. For example, given a <tt class="docutils literal"><span class="pre">./src</span></tt> directory, <tt class="docutils literal"><span class="pre">src</span></tt> will be equivalent to <tt class="docutils literal"><span class="pre">src/**</span></tt> and thus all elements within the directory will match. Set <tt class="docutils literal"><span class="pre">expandDirs = false</span></tt> to disable this behavior.</p>
 <p>Hidden files and directories are not yielded by default but can be included by setting <tt class="docutils literal"><span class="pre">includeHidden = true</span></tt>. The same goes for directories and the <tt class="docutils literal"><span class="pre">includeDirs = true</span></tt> parameter.</p>
+<p><cite>filter</cite> is an optional proc with the signature <a class="reference external" href="#GlobFilter">GlobFilter</a> that supports skipping file system items or dynamically preventing directory traversal.</p>
 
 
 </dd>
-<dt id="walkGlob"><a name="walkGlob.i,,string"></a><pre><span class="Keyword">iterator</span> <span class="Identifier">walkGlob</span><span class="Other">(</span><span class="Identifier">pattern</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Operator">|</span> <span class="Identifier">Glob</span><span class="Other">;</span> <span class="Identifier">root</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span> <span class="Identifier">relative</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">;</span> <span class="Identifier">expandDirs</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">;</span>
-                 <span class="Identifier">includeHidden</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">;</span> <span class="Identifier">includeDirs</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
+<dt id="walkGlob"><a name="walkGlob.i,,string,GlobFilter"></a><pre><span class="Keyword">iterator</span> <span class="Identifier">walkGlob</span><span class="Other">(</span><span class="Identifier">pattern</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Operator">|</span> <span class="Identifier">Glob</span><span class="Other">;</span> <span class="Identifier">root</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span> <span class="Identifier">relative</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">;</span> <span class="Identifier">expandDirs</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">;</span>
+                 <span class="Identifier">includeHidden</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">;</span> <span class="Identifier">includeDirs</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">;</span> <span class="Identifier">filter</span><span class="Other">:</span> <span class="Identifier">GlobFilter</span> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
 <dd>
 Equivalent to <a class="reference external" href="#walkGlobKinds.i,string,string">walkGlobKinds</a> but rather than yielding a <a class="reference external" href="#GlobResult">GlobResult</a> it yields only the <tt class="docutils literal"><span class="pre">path</span></tt> of the item, ignoring its <tt class="docutils literal"><span class="pre">kind</span></tt>.
 
@@ -1483,7 +1488,7 @@ Equivalent to <a class="reference external" href="#walkGlobKinds.i,string,string
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small>Made with Nim. Generated: 2018-05-30 18:45:57 UTC</small>
+        <small>Made with Nim. Generated: 2018-07-06 21:22:32 UTC</small>
       </div>
     </div>
   </div>
