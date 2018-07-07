@@ -183,8 +183,12 @@ proc hasMagic* (str: string): bool =
 
 proc toRelative (path, dir: string): string =
   if path.startsWith(dir):
+    #TODO: try inputs with a// or a//b/c//d
     let start = if dir.endsWith(DirSep): dir.len else: dir.len + 1
-    path[start..<path.len]
+    if start >= path.len:
+      "." #CHECKME
+    else:
+      path[start..<path.len]
   else:
     path
 
@@ -241,6 +245,8 @@ proc matches* (input, pattern: string; isDos = isDosDefault): bool =
   ## ``true`` if ``input`` is a match. Shortcut for ``matches(input, glob(pattern, isDos))``.
   input.contains(globToRegex(pattern, isDos))
 
+proc isDir(kind: PathComponent) : bool = kind in [pcDir, pcLinkToDir]
+
 iterator walkGlobKinds* (
   pattern: string | Glob,
   root = "",
@@ -270,6 +276,7 @@ iterator walkGlobKinds* (
     proceed = matchPattern.hasMagic
 
   if not proceed:
+    #TODO: need to document this case
     let kind = matchPattern.pathType
     if not kind.isNone:
       case kind.get()
@@ -296,26 +303,35 @@ iterator walkGlobKinds* (
     let matcher = matchPattern.glob
     let isRec = matchPattern.contains("**")
 
-    var stack = @[dir]
+    #TODO: check glob("./foo.txt")
+    var stack = newSeq[GlobResult]()
+    #CHECKME:pcDir?pcLinkToDir? unknown? who cares?
+    stack.add((dir, pcDir))
+
+    template maybeYield(top: GlobResult):untyped =
+      if top.path.isHidden and not includeHidden:
+        continue
+      let rel = top.path.toRelative(dir)
+      if not rel.matches(matcher):
+        continue
+      if includeDirs or not top.kind.isDir:
+        var path2: string
+        if relative:
+          if rel == ".":
+            path2 = base
+          else:
+            path2 = base / rel
+        else:
+          path2 = top.path
+        yield (path2.unixToNativePath, top.kind)
+
     while stack.len > 0:
-      let subdir = stack.pop
-      for kind, path in walkDir(subdir):
-        let rel = path.toRelative(dir)
-
-        case kind
-        of pcDir, pcLinkToDir:
-          if (
-            rel.matches(matcher) and
-            includeDirs and
-            (not path.isHidden or includeHidden)
-          ):
-            yield ((if relative: base / rel else: path).unixToNativePath, kind)
-
-          if isRec: stack.add(path)
-        of pcFile, pcLinkToFile:
-          if path.isHidden and not includeHidden: continue
-          if rel.matches(matcher):
-            yield ((if relative: base / rel else: path).unixToNativePath, kind)
+      let top = stack.pop
+      maybeYield(top)
+      if top.kind.isDir:
+        for kind, path in walkDir(top.path):
+          #if isRec: stack.add(path) => TODO: replace with level (more general than isRec)
+          stack.add((path, kind))
 
 iterator walkGlob* (
   pattern: string | Glob,
