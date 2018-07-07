@@ -311,7 +311,8 @@ iterator walkGlobKinds* (
           ):
             yield ((if relative: base / rel else: path).unixToNativePath, kind)
 
-          if isRec: stack.add(path)
+          if isRec and (includeHidden or not path.isHidden):
+            stack.add(path)
         of pcFile, pcLinkToFile:
           if path.isHidden and not includeHidden: continue
           if rel.matches(matcher):
