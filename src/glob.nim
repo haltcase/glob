@@ -174,6 +174,15 @@ type
     ## contains any path segments containing or following special glob
     ## characters.
 
+  GlobFilter* =
+    proc (path: string, kind: PathComponent): bool
+    ## Signature for procs that can be passed to `listGlob <#listGlob,,string>`_
+    ## or the iterators to skip files or directories or to selectively prevent
+    ## directory recursion.
+    ##
+    ## Returning ``false`` will skip the item. If the path is a directory, it will
+    ## not be traversed into even when the pattern is recursive.
+
 proc hasMagic* (str: string): bool =
   ## Returns ``true`` if the given string is glob-like, ie. if it contains any
   ## of the special characters ``*``, ``?``, ``[``, ``{`` or an ``extglob``
@@ -247,7 +256,8 @@ iterator walkGlobKinds* (
   relative = true,
   expandDirs = true,
   includeHidden = false,
-  includeDirs = false
+  includeDirs = false,
+  filter: GlobFilter = nil
 ): GlobResult =
   ## Iterates over all the paths within the scope of the given glob ``pattern``,
   ## yielding all those that match. ``root`` defaults to the current working
@@ -264,6 +274,10 @@ iterator walkGlobKinds* (
   ## Hidden files and directories are not yielded by default but can be included
   ## by setting ``includeHidden = true``. The same goes for directories and the
   ## ``includeDirs = true`` parameter.
+  ##
+  ## `filter` is an optional proc with the signature `GlobFilter <#GlobFilter>`_
+  ## that supports skipping file system items or dynamically preventing directory
+  ## traversal.
   var
     dir = if root == "": getCurrentDir() else: root
     matchPattern = when pattern is Glob: pattern.pattern else: pattern
@@ -301,6 +315,10 @@ iterator walkGlobKinds* (
       let subdir = stack.pop
       for kind, path in walkDir(subdir):
         let rel = path.toRelative(dir)
+        let resultPath = (if relative: base / rel else: path).unixToNativePath
+
+        if filter != nil and not filter(resultPath, kind):
+          continue
 
         case kind
         of pcDir, pcLinkToDir:
@@ -309,14 +327,14 @@ iterator walkGlobKinds* (
             includeDirs and
             (not path.isHidden or includeHidden)
           ):
-            yield ((if relative: base / rel else: path).unixToNativePath, kind)
+            yield (resultPath, kind)
 
           if isRec and (includeHidden or not path.isHidden):
             stack.add(path)
         of pcFile, pcLinkToFile:
           if path.isHidden and not includeHidden: continue
           if rel.matches(matcher):
-            yield ((if relative: base / rel else: path).unixToNativePath, kind)
+            yield (resultPath, kind)
 
 iterator walkGlob* (
   pattern: string | Glob,
@@ -324,12 +342,15 @@ iterator walkGlob* (
   relative = true,
   expandDirs = true,
   includeHidden = false,
-  includeDirs = false
+  includeDirs = false,
+  filter: GlobFilter = nil
 ): string =
   ## Equivalent to `walkGlobKinds <#walkGlobKinds.i,string,string>`_ but rather
   ## than yielding a `GlobResult <#GlobResult>`_ it yields only the ``path`` of the item,
   ## ignoring its ``kind``.
-  for path, _ in walkGlobKinds(pattern, root, relative, expandDirs, includeHidden, includeDirs):
+  for path, _ in walkGlobKinds(
+    pattern, root, relative, expandDirs, includeHidden, includeDirs, filter
+  ):
     yield path
 
 proc listGlob* (
@@ -338,12 +359,17 @@ proc listGlob* (
   relative = true,
   expandDirs = true,
   includeHidden = false,
-  includeDirs = false
+  includeDirs = false,
+  filter: GlobFilter = nil
 ): seq[string] =
   ## Returns a list of all the file system items matching ``pattern``. See
   ## the documentation for `walkGlobKinds <#walkGlobKinds.i,string,string>`_
   ## for more info.
-  accumulateResult(walkGlob(pattern, root, relative, expandDirs, includeHidden, includeDirs))
+  accumulateResult(
+    walkGlob(
+      pattern, root, relative, expandDirs, includeHidden, includeDirs, filter
+    )
+  )
 
 export PathComponent
 export regexer

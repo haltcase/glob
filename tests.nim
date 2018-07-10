@@ -1,7 +1,8 @@
 import future
 import ospaths
-from os import createDir, removeDir, getCurrentDir
 from algorithm import sortedByIt
+from os import createDir, removeDir, getCurrentDir
+from strutils import contains, count
 
 import unittest
 
@@ -349,6 +350,14 @@ suite "pattern walking / listing":
     test "`relative = false` makes returned paths absolute":
       check seqsEqual(listGlob("temp/*.nim", relative = false), @[
         getCurrentDir() / "temp" / "shallow.nim"
+      ])
+
+    test "`filter` proc allows skipping files & directories":
+      proc filterFn (path: string, kind: PathComponent): bool =
+        path.count(DirSep) < 2 and "not_as" notin path
+
+      check seqsEqual(listGlob("temp", filter = filterFn), @[
+        "temp" / "shallow.nim"
       ])
 
     cleanup()
