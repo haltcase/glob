@@ -176,12 +176,12 @@ type
     ## characters.
 
   GlobOptions* {.pure.} = enum
-    Relative, ExpandDirs, Hidden, Directories, Links, FollowLinks
+    Relative, ExpandDirs, Hidden, Files, Directories, Links, FollowLinks
 
   FilterDescend* = string -> bool
   FilterYield* = (string, PathComponent) -> bool
 
-const defaultGlobOptions* = {Relative, ExpandDirs, Links}
+const defaultGlobOptions* = {Relative, ExpandDirs, Files, Links}
 
 proc hasMagic* (str: string): bool =
   ## Returns ``true`` if the given string is glob-like, ie. if it contains any
@@ -278,27 +278,29 @@ iterator walkGlobKinds* (
     proceed = matchPattern.hasMagic
 
   template push (path: string, kind: PathComponent, dir = "") =
-    yield (
-      unixToNativePath(
-        if Relative in options and dir != "": path.toRelative(dir)
-        else: path
-      ),
-      kind
-    )
+    if filterYield.isNil or filterYield(path, kind):
+      yield (
+        unixToNativePath(
+          if Relative in options and dir != "": path.toRelative(dir)
+          else: path
+        ),
+        kind
+      )
 
   if not proceed:
     let kind = matchPattern.pathType
     if not kind.isNone:
       let k = kind.get()
-      case k
-      of pcDir, pcLinkToDir:
-        if Directories in options and (k == pcLinkToDir and Links in options):
+      if Hidden in options or not matchPattern.isHidden:
+        case k
+        of pcDir, pcLinkToDir:
+          if Directories in options and (k == pcDir or Links in options):
+            push(matchPattern, k, dir)
+          if ExpandDirs in options:
+            proceed = true
+            matchPattern &= "/**"
+        of pcFile, pcLinkToFile:
           push(matchPattern, k, dir)
-        if ExpandDirs in options:
-          proceed = true
-          matchPattern &= "/**"
-      else:
-        push(matchPattern, k, dir)
 
   var base: string
   when pattern is Glob:
@@ -318,17 +320,19 @@ iterator walkGlobKinds* (
     while stack.len > 0:
       let subdir = stack.pop
       for kind, path in walkDir(subdir):
-        let rel = path.toRelative(dir)
-        let resultPath = unixToNativePath(
-          if Relative in options: base / rel else: path
-        )
+        if Hidden notin options and path.isHidden: continue
+
+        let
+          rel = path.toRelative(dir)
+          isMatch = rel.matches(matcher)
+          resultPath = unixToNativePath(
+            if Relative in options: base / rel else: path
+          )
 
         case kind
         of pcLinkToDir:
-          if Links notin options or not rel.matches(matcher):
-            continue
-
-          push(resultPath, kind)
+          if {Links, Directories} < options and isMatch:
+            push(resultPath, kind)
 
           if FollowLinks in options:
             if subdir.startsWith(last & DirSep):
@@ -336,28 +340,20 @@ iterator walkGlobKinds* (
               continue
 
             last = subdir
+
+            if isRec and (filterDescend.isNil or filterDescend(resultPath)):
+              stack.add(path)
         of pcDir:
-          if (
-            Directories in options and
-            rel.matches(matcher) and
-            (Hidden in options or not path.isHidden) and
-            (filterYield.isNil or filterYield(resultPath, kind))
-          ):
+          if Directories in options and isMatch:
             push(resultPath, kind)
 
-          if (
-            isRec and
-            (Hidden in options or not path.isHidden) and
-            (filterDescend.isNil or filterDescend(resultPath))
-          ):
+          if isRec and (filterDescend.isNil or filterDescend(resultPath)):
             stack.add(path)
-        of pcFile, pcLinkToFile:
-          if (
-            (kind == pcFile or Links in options) and
-            rel.matches(matcher) and
-            (Hidden in options or not path.isHidden) and
-            (filterYield.isNil or filterYield(resultPath, kind))
-          ):
+        of pcLinkToFile:
+          if {Links, Files} < options and isMatch:
+            push(resultPath, kind)
+        of pcFile:
+          if Files in options and isMatch:
             push(resultPath, kind)
 
 iterator walkGlob* (
