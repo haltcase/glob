@@ -138,6 +138,7 @@ supported yet but will potentially be added in the future. This includes:
 
 ]##
 
+import future
 import os
 import options
 from strutils import contains, endsWith, startsWith
@@ -173,6 +174,14 @@ type
     ## ``base`` contains the leading non-magic path components and ``magic``
     ## contains any path segments containing or following special glob
     ## characters.
+
+  GlobOptions* {.pure.} = enum
+    Relative, ExpandDirs, Hidden, Directories, Links, FollowLinks
+
+  FilterDescend* = string -> bool
+  FilterYield* = (string, PathComponent) -> bool
+
+const defaultGlobOptions* = {Relative, ExpandDirs, Links}
 
 proc hasMagic* (str: string): bool =
   ## Returns ``true`` if the given string is glob-like, ie. if it contains any
@@ -244,10 +253,9 @@ proc matches* (input, pattern: string; isDos = isDosDefault): bool =
 iterator walkGlobKinds* (
   pattern: string | Glob,
   root = "",
-  relative = true,
-  expandDirs = true,
-  includeHidden = false,
-  includeDirs = false
+  options = defaultGlobOptions,
+  filterDescend: FilterDescend = nil,
+  filterYield: FilterYield = nil
 ): GlobResult =
   ## Iterates over all the paths within the scope of the given glob ``pattern``,
   ## yielding all those that match. ``root`` defaults to the current working
@@ -256,9 +264,9 @@ iterator walkGlobKinds* (
   ## Returned paths are relative to ``root`` by default but ``relative = false``
   ## will yield absolute paths instead.
   ##
-  ## Directories in the glob pattern are expanded by default. For example,
-  ## given a ``./src`` directory, ``src`` will be equivalent to ``src/**`` and
-  ## thus all elements within the directory will match. Set ``expandDirs = false``
+  ## Directories in the glob pattern are expanded by default. For example, given
+  ## a ``./src`` directory, ``src`` will be equivalent to ``src/**`` and thus
+  ## all elements within the directory will match. Set ``expandDirs = false``
   ## to disable this behavior.
   ##
   ## Hidden files and directories are not yielded by default but can be included
@@ -269,19 +277,28 @@ iterator walkGlobKinds* (
     matchPattern = when pattern is Glob: pattern.pattern else: pattern
     proceed = matchPattern.hasMagic
 
+  template push (path: string, kind: PathComponent, dir = "") =
+    yield (
+      unixToNativePath(
+        if Relative in options and dir != "": path.toRelative(dir)
+        else: path
+      ),
+      kind
+    )
+
   if not proceed:
     let kind = matchPattern.pathType
     if not kind.isNone:
-      case kind.get()
+      let k = kind.get()
+      case k
       of pcDir, pcLinkToDir:
-        if expandDirs:
+        if Directories in options or (k == pcLinkToDir and Links in options):
+          push(matchPattern, k, dir)
+        if ExpandDirs in options:
           proceed = true
           matchPattern &= "/**"
       else:
-        yield (
-          (if relative: matchPattern.toRelative(dir) else: matchPattern).unixToNativePath,
-          kind.get()
-        )
+        push(matchPattern, k, dir)
 
   var base: string
   when pattern is Glob:
@@ -297,53 +314,64 @@ iterator walkGlobKinds* (
     let isRec = matchPattern.contains("**")
 
     var stack = @[dir]
+    var last = dir
     while stack.len > 0:
       let subdir = stack.pop
       for kind, path in walkDir(subdir):
         let rel = path.toRelative(dir)
+        let resultPath = unixToNativePath(
+          if Relative in options: base / rel else: path
+        )
 
         case kind
-        of pcDir, pcLinkToDir:
-          if (
-            rel.matches(matcher) and
-            includeDirs and
-            (not path.isHidden or includeHidden)
-          ):
-            yield ((if relative: base / rel else: path).unixToNativePath, kind)
+        of pcLinkToDir:
+          if Links notin options or not rel.matches(matcher):
+            continue
 
-          if isRec and (includeHidden or not path.isHidden):
+          push(resultPath, kind)
+
+          if FollowLinks in options:
+            if subdir.startsWith(last & DirSep):
+              # recursive symbolic link; following would result in an infinite loop
+              continue
+
+            last = subdir
+        of pcDir:
+          if (
+            Directories in options and
+            rel.matches(matcher) and
+            (Hidden in options or not path.isHidden) and
+            (filterYield.isNil or filterYield(resultPath, kind))
+          ):
+            push(resultPath, kind)
+
+          if (
+            isRec and
+            (Hidden in options or not path.isHidden) and
+            (filterDescend.isNil or filterDescend(resultPath))
+          ):
             stack.add(path)
         of pcFile, pcLinkToFile:
-          if path.isHidden and not includeHidden: continue
-          if rel.matches(matcher):
-            yield ((if relative: base / rel else: path).unixToNativePath, kind)
+          if (
+            (kind == pcFile or Links in options) and
+            rel.matches(matcher) and
+            (Hidden in options or not path.isHidden) and
+            (filterYield.isNil or filterYield(resultPath, kind))
+          ):
+            push(resultPath, kind)
 
 iterator walkGlob* (
   pattern: string | Glob,
   root = "",
-  relative = true,
-  expandDirs = true,
-  includeHidden = false,
-  includeDirs = false
+  options = defaultGlobOptions,
+  filterDescend: FilterDescend = nil,
+  filterYield: FilterYield = nil
 ): string =
   ## Equivalent to `walkGlobKinds <#walkGlobKinds.i,string,string>`_ but rather
-  ## than yielding a `GlobResult <#GlobResult>`_ it yields only the ``path`` of the item,
-  ## ignoring its ``kind``.
-  for path, _ in walkGlobKinds(pattern, root, relative, expandDirs, includeHidden, includeDirs):
+  ## than yielding a `GlobResult <#GlobResult>`_ it yields only the ``path`` of
+  ## the item, ignoring its ``kind``.
+  for path, _ in walkGlobKinds(pattern, root, options, filterDescend, filterYield):
     yield path
-
-proc listGlob* (
-  pattern: string | Glob,
-  root = "",
-  relative = true,
-  expandDirs = true,
-  includeHidden = false,
-  includeDirs = false
-): seq[string] =
-  ## Returns a list of all the file system items matching ``pattern``. See
-  ## the documentation for `walkGlobKinds <#walkGlobKinds.i,string,string>`_
-  ## for more info.
-  accumulateResult(walkGlob(pattern, root, relative, expandDirs, includeHidden, includeDirs))
 
 export PathComponent
 export regexer
