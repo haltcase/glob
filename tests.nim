@@ -2,6 +2,7 @@ import future
 import ospaths
 from os import createDir, removeDir, getCurrentDir
 from algorithm import sortedByIt
+from sequtils import toSeq
 
 import unittest
 
@@ -50,10 +51,7 @@ suite "procs accept both string & glob":
     check "src/dir/foo.nim".matches("src/**/*.nim", false)
     check "src/dir/foo.nim".matches(glob("src/**/*.nim", false))
 
-  test "listGlob":
-    # listGlob uses `walkGlob` and therefore `walkGlobKinds` under the hood
-    # so if it works, those underlying procs should also work
-
+  test "walkGlob, walkGlobKinds":
     let cleanup = createStructure("temp", @[
       "deep" / "dir" / "file.nim",
       "not_as" / "deep.jpg",
@@ -68,8 +66,8 @@ suite "procs accept both string & glob":
       "temp" / "shallow.nim"
     ]
 
-    check seqsEqual(listGlob("temp/**/*.{jpg,nim}"), expected)
-    check seqsEqual(listGlob(glob("temp/**/*.{jpg,nim}")), expected)
+    check seqsEqual(toSeq(walkGlob("temp/**/*.{jpg,nim}")), expected)
+    check seqsEqual(toSeq(walkGlob(glob("temp/**/*.{jpg,nim}"))), expected)
 
     cleanup()
 
@@ -303,32 +301,33 @@ suite "pattern walking / listing":
     ])
 
     test "basic":
-      check seqsEqual(listGlob("temp"), @[
+      check seqsEqual(toSeq(walkGlob("temp")), @[
         "temp" / "deep" / "dir" / "file.nim",
         "temp" / "not_as" / "deep.jpg",
         "temp" / "not_as" / "deep.nim",
         "temp" / "shallow.nim"
       ])
 
-      check seqsEqual(listGlob("temp/**/*.{nim,jpg}"), @[
+      check seqsEqual(toSeq(walkGlob("temp/**/*.{nim,jpg}")), @[
         "temp" / "deep" / "dir" / "file.nim",
         "temp" / "not_as" / "deep.jpg",
         "temp" / "not_as" / "deep.nim",
         "temp" / "shallow.nim"
       ])
 
-      check seqsEqual(listGlob("temp/*.nim"), @[
+      check seqsEqual(toSeq(walkGlob("temp/*.nim")), @[
         "temp" / "shallow.nim"
       ])
 
-      check seqsEqual(listGlob("temp/**/*.nim"), @[
+      check seqsEqual(toSeq(walkGlob("temp/**/*.nim")), @[
         "temp" / "deep" / "dir" / "file.nim",
         "temp" / "not_as" / "deep.nim",
         "temp" / "shallow.nim"
       ])
 
     test "`includeDirs` adds matching directories to the results":
-      check seqsEqual(listGlob("temp/**", includeDirs = true), @[
+      let options = defaultGlobOptions + {Directories}
+      check seqsEqual(toSeq(walkGlob("temp/**", options = options)), @[
         "temp" / "deep",
         "temp" / "deep" / "dir",
         "temp" / "deep" / "dir" / "file.nim",
@@ -339,7 +338,7 @@ suite "pattern walking / listing":
       ])
 
     test "directories are expanded by default":
-      check seqsEqual(listGlob("temp"), @[
+      check seqsEqual(toSeq(walkGlob("temp")), @[
         "temp" / "deep" / "dir" / "file.nim",
         "temp" / "not_as" / "deep.jpg",
         "temp" / "not_as" / "deep.nim",
@@ -347,7 +346,8 @@ suite "pattern walking / listing":
       ])
 
     test "`relative = false` makes returned paths absolute":
-      check seqsEqual(listGlob("temp/*.nim", relative = false), @[
+      let options = defaultGlobOptions - {Relative}
+      check seqsEqual(toSeq(walkGlob("temp/*.nim", options = options)), @[
         getCurrentDir() / "temp" / "shallow.nim"
       ])
 
