@@ -176,18 +176,59 @@ type
     ## characters.
 
   GlobOptions* {.pure.} = enum
-    Relative, ExpandDirs, Hidden, Files, Directories, FileLinks, DirLinks, FollowLinks
+    ## Flags that control the behavior or results of the file system iterators. See
+    ## `defaultGlobOptions <#defaultGlobOptions>`_ for some usage & examples.
+    ##
+    ## ==========================   ================================================
+    ##  flag                         meaning
+    ## ==========================   ================================================
+    ## GlobOptions.Relative     yield paths as relative to root
+    ## GlobOptions.ExpandDirs   if pattern is a directory, treat it as ``<dir>/**/*``
+    ## GlobOptions.Hidden       yield hidden files or directories
+    ## GlobOptions.Directories  yield directories
+    ## GlobOptions.Files        yield files
+    ## GlobOptions.DirLinks     yield links to directories
+    ## GlobOptions.FileLinks    yield links to files
+    ## GlobOptions.FollowLinks  recurse into directories through links
+    ## ==========================   ================================================
+    Relative, ExpandDirs, FollowLinks,               ## iterator behavior
+    Hidden, Files, Directories, FileLinks, DirLinks  ## to yield or not to yield
 
-  FilterDescend* = string -> bool
-  FilterYield* = (string, PathComponent) -> bool
+  FilterDescend* = (path: string) -> bool
+    ## A predicate controlling whether or not to recurse into a directory when
+    ## iterating with a recursive glob pattern. Returning ``true`` will allow
+    ## recursion, while returning ``false`` will prevent it.
+    ##
+    ## ``path`` can either be relative or absolute, which depends on
+    ## ``GlobOptions.Relative`` being present in the iterator's options.
+  FilterYield* = (path: string, kind: PathComponent) -> bool
+    ## A predicate controlling whether or not to yield a filesystem item. Paths
+    ## for which this predicate returns ``false`` will not be yielded.
+    ##
+    ## ``path`` can either be relative or absolute, which depends on
+    ## ``GlobOptions.Relative`` being present in the iterator's options.
+    ## ``kind`` is one of ``pcDir``, ``pcFile``, ``pcLinkToDir``, ``pcLinkToFile``.
 
 const defaultGlobOptions* = {Relative, ExpandDirs, Files, FileLinks, DirLinks}
+  ## The default options used when none are provided. If a new set is
+  ## provided, it overrides the defaults entirely, so in order to partially
+  ## modify the default options you can use Nim's ``set`` union and intersection
+  ## operators:
+  ##
+  ## .. code-block:: Nim
+  ##     const optsNoFiles = defaultGlobOptions - {Files}
+  ##     const optsHiddenNoLinks = defaultGlobOptions + {Hidden} - {FileLinks, DirLinks}
 
 proc hasMagic* (str: string): bool =
   ## Returns ``true`` if the given string is glob-like, ie. if it contains any
   ## of the special characters ``*``, ``?``, ``[``, ``{`` or an ``extglob``
   ## which is one of the characters ``?``, ``!``, ``@``, ``+``, or ``*``
   ## followed by ``(``.
+  runnableExamples:
+    doAssert("*.nim".hasMagic)
+    doAssert("profile_picture.{png,jpg}".hasMagic)
+    doAssert(not "literal_match.html".hasMagic)
+
   str.contains({'*', '?', '[', '{'}) or str.contains(re"[?!@+]\(")
 
 proc toRelative (path, dir: string): string =
@@ -218,6 +259,9 @@ proc splitPattern* (pattern: string): PatternStems =
   ## When ``pattern`` is not glob-like, ie. ``pattern.hasMagic == false``,
   ## it will be considered a literal matcher and the entire pattern will
   ## be returned as ``magic``, while ``base`` will be the empty string ``""``.
+  runnableExamples:
+    doAssert "root_dir/inner/**/*.{jpg,gif}".splitPattern == ("root_dir/inner", "**/*.{jpg,gif}")
+
   if not pattern.hasMagic or not pattern.contains(re"[^\\]\/"):
     return ("", pattern)
 
@@ -243,11 +287,18 @@ proc glob* (pattern: string, isDos = isDosDefault): Glob =
 
 proc matches* (input: string, glob: Glob): bool =
   ## Returns ``true`` if ``input`` is a match for the given ``glob`` object.
+  runnableExamples:
+    const matcher = glob("src/**/*.nim")
+    doAssert "src/dir/foo.nim".matches(matcher)
+
   input.contains(glob.regex)
 
 proc matches* (input, pattern: string; isDos = isDosDefault): bool =
   ## Constructs a `Glob <#Glob>`_ object from the given ``pattern`` and returns
   ## ``true`` if ``input`` is a match. Shortcut for ``matches(input, glob(pattern, isDos))``.
+  runnableExamples:
+    doAssert "src/dir/foo.nim".matches("src/**/*.nim")
+
   input.contains(globToRegex(pattern, isDos))
 
 iterator walkGlobKinds* (
@@ -257,21 +308,18 @@ iterator walkGlobKinds* (
   filterDescend: FilterDescend = nil,
   filterYield: FilterYield = nil
 ): GlobResult =
-  ## Iterates over all the paths within the scope of the given glob ``pattern``,
-  ## yielding all those that match. ``root`` defaults to the current working
-  ## directory (by using ``os.getCurrentDir``).
-  ##
-  ## Returned paths are relative to ``root`` by default but ``relative = false``
-  ## will yield absolute paths instead.
-  ##
-  ## Directories in the glob pattern are expanded by default. For example, given
-  ## a ``./src`` directory, ``src`` will be equivalent to ``src/**`` and thus
-  ## all elements within the directory will match. Set ``expandDirs = false``
-  ## to disable this behavior.
-  ##
-  ## Hidden files and directories are not yielded by default but can be included
-  ## by setting ``includeHidden = true``. The same goes for directories and the
-  ## ``includeDirs = true`` parameter.
+  ## Equivalent to `walkGlob <#walkGlob.i,,string,FilterDescend,FilterYield>`_ but
+  ## yields a `GlobResult <#GlobResult>`_ which contains the ``path`` as well as
+  ## the ``kind`` of the item.
+  runnableExamples:
+    for path, kind in walkGlobKinds("src/*.nim"):
+      doAssert path is string and kind is PathComponent
+
+    ## include hidden items, exclude links
+    const optsHiddenNoLinks = defaultGlobOptions + {Hidden} - {FileLinks, DirLinks}
+    for path, kind in walkGlobKinds("src/**/*", options = options):
+      doAssert kind isnot pcFile
+
   var
     dir = if root == "": getCurrentDir() else: root
     matchPattern = when pattern is Glob: pattern.pattern else: pattern
@@ -365,9 +413,22 @@ iterator walkGlob* (
   filterDescend: FilterDescend = nil,
   filterYield: FilterYield = nil
 ): string =
-  ## Equivalent to `walkGlobKinds <#walkGlobKinds.i,string,string>`_ but rather
-  ## than yielding a `GlobResult <#GlobResult>`_ it yields only the ``path`` of
-  ## the item, ignoring its ``kind``.
+  ## Iterates over all the paths within the scope of the given glob ``pattern``,
+  ## yielding all those that match. ``root`` defaults to the current working
+  ## directory (by using ``os.getCurrentDir``).
+  ##
+  ## See `GlobOptions <#GlobOptions>`_ for the flags available to alter
+  ## iteration behavior and output.
+  runnableExamples:
+    for path in walkGlob("src/*.nim"):
+      ## `path` is a file only in the `src` directory (not any of its
+      ## subdirectories) with the `.nim` file extension
+      discard
+
+    for path in walkGlob("docs/**/*.{png, svg}"):
+      ## `path` is a file in the `docs` directory or any of its
+      ## subdirectories with either a `png` or `svg` file extension
+      discard
   for path, _ in walkGlobKinds(pattern, root, options, filterDescend, filterYield):
     yield path
 
