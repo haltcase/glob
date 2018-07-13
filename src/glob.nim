@@ -292,7 +292,7 @@ iterator walkGlobKinds* (
       let k = kind.get()
       case k
       of pcDir, pcLinkToDir:
-        if Directories in options or (k == pcLinkToDir and Links in options):
+        if Directories in options and (k == pcLinkToDir and Links in options):
           push(matchPattern, k, dir)
         if ExpandDirs in options:
           proceed = true
