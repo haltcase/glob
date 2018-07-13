@@ -176,12 +176,12 @@ type
     ## characters.
 
   GlobOptions* {.pure.} = enum
-    Relative, ExpandDirs, Hidden, Files, Directories, Links, FollowLinks
+    Relative, ExpandDirs, Hidden, Files, Directories, FileLinks, DirLinks, FollowLinks
 
   FilterDescend* = string -> bool
   FilterYield* = (string, PathComponent) -> bool
 
-const defaultGlobOptions* = {Relative, ExpandDirs, Files, Links}
+const defaultGlobOptions* = {Relative, ExpandDirs, Files, FileLinks, DirLinks}
 
 proc hasMagic* (str: string): bool =
   ## Returns ``true`` if the given string is glob-like, ie. if it contains any
@@ -294,13 +294,15 @@ iterator walkGlobKinds* (
       if Hidden in options or not matchPattern.isHidden:
         case k
         of pcDir, pcLinkToDir:
-          if Directories in options and (k == pcDir or Links in options):
+          if Directories in options and (k == pcDir or DirLinks in options):
             push(matchPattern, k, dir)
           if ExpandDirs in options:
             proceed = true
             matchPattern &= "/**"
-        of pcFile, pcLinkToFile:
+        of pcFile:
           push(matchPattern, k, dir)
+        of pcLinkToFile:
+          if FileLinks in options: push(matchPattern, k, dir)
 
   var base: string
   when pattern is Glob:
@@ -331,7 +333,7 @@ iterator walkGlobKinds* (
 
         case kind
         of pcLinkToDir:
-          if {Links, Directories} < options and isMatch:
+          if DirLinks in options and isMatch:
             push(resultPath, kind)
 
           if FollowLinks in options:
@@ -350,7 +352,7 @@ iterator walkGlobKinds* (
           if isRec and (filterDescend.isNil or filterDescend(resultPath)):
             stack.add(path)
         of pcLinkToFile:
-          if {Links, Files} < options and isMatch:
+          if FileLinks in options and isMatch:
             push(resultPath, kind)
         of pcFile:
           if Files in options and isMatch:
