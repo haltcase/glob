@@ -233,7 +233,7 @@ proc hasMagic* (str: string): bool =
 
 proc toRelative (path, dir: string): string =
   if path.startsWith(dir):
-    let start = if dir.endsWith(DirSep): dir.len else: dir.len + 1
+    let start = dir.len + dir.endsWith(DirSep).not.int
     path[start..<path.len]
   else:
     path
