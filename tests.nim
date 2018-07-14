@@ -345,8 +345,8 @@ suite "pattern walking / listing":
         "temp" / "shallow.nim"
       ])
 
-    test "`relative = false` makes returned paths absolute":
-      let options = defaultGlobOptions - {Relative}
+    test "`Absolute` makes returned paths absolute":
+      let options = defaultGlobOptions + {Absolute}
       check seqsEqual(toSeq(walkGlob("temp/*.nim", options = options)), @[
         getCurrentDir() / "temp" / "shallow.nim"
       ])
