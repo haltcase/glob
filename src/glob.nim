@@ -179,18 +179,18 @@ type
     ## Flags that control the behavior or results of the file system iterators. See
     ## `defaultGlobOptions <#defaultGlobOptions>`_ for some usage & examples.
     ##
-    ## ==========================   ================================================
-    ##  flag                         meaning
-    ## ==========================   ================================================
-    ## GlobOptions.Relative     yield paths as relative to root
-    ## GlobOptions.ExpandDirs   if pattern is a directory, treat it as ``<dir>/**/*``
-    ## GlobOptions.Hidden       yield hidden files or directories
-    ## GlobOptions.Directories  yield directories
-    ## GlobOptions.Files        yield files
-    ## GlobOptions.DirLinks     yield links to directories
-    ## GlobOptions.FileLinks    yield links to files
-    ## GlobOptions.FollowLinks  recurse into directories through links
-    ## ==========================   ================================================
+    ## ============================  ======================================================
+    ##  flag                          meaning
+    ## ============================  ======================================================
+    ## ``GlobOptions.Absolute``      yield paths as absolute rather than relative to root
+    ## ``GlobOptions.ExpandDirs``    if pattern is a directory, treat it as ``<dir>/**/*``
+    ## ``GlobOptions.Hidden``        yield hidden files or directories
+    ## ``GlobOptions.Directories``   yield directories
+    ## ``GlobOptions.Files``         yield files
+    ## ``GlobOptions.DirLinks``      yield links to directories
+    ## ``GlobOptions.FileLinks``     yield links to files
+    ## ``GlobOptions.FollowLinks``   recurse into directories through links
+    ## ============================  ======================================================
     Absolute, ExpandDirs, FollowLinks,               ## iterator behavior
     Hidden, Files, Directories, FileLinks, DirLinks  ## to yield or not to yield
 
