@@ -287,17 +287,30 @@ proc glob* (pattern: string, isDos = isDosDefault): Glob =
 
 proc matches* (input: string, glob: Glob): bool =
   ## Returns ``true`` if ``input`` is a match for the given ``glob`` object.
+  ##
+  ## *Note: because globs are compiled to handle the current system's path separators
+  ## by default, to make these examples work cross-platform we provide the* ``isDos``
+  ## *parameter explicitly, but it can normally be left out.*
   runnableExamples:
-    const matcher = glob("src/**/*.nim")
-    doAssert "src/dir/foo.nim".matches(matcher)
+    const matcher1 = glob("src/**/*.nim", isDos = false)
+    doAssert("src/dir/foo.nim".matches(matcher1))
+    doAssert(not r"src\dir\foo.nim".matches(matcher1))
+
+    const matcher2 = glob("src/**/*.nim", isDos = true)
+    doAssert(r"src\dir\foo.nim".matches(matcher2))
+    doAssert(not "src/dir/foo.nim".matches(matcher2))
 
   input.contains(glob.regex)
 
 proc matches* (input, pattern: string; isDos = isDosDefault): bool =
   ## Constructs a `Glob <#Glob>`_ object from the given ``pattern`` and returns
   ## ``true`` if ``input`` is a match. Shortcut for ``matches(input, glob(pattern, isDos))``.
+  ##
+  ## *Note: because globs are compiled to handle the current system's path separators
+  ## by default, to make these examples work cross-platform we provide the* ``isDos``
+  ## *parameter explicitly, but it can normally be left out.*
   runnableExamples:
-    doAssert "src/dir/foo.nim".matches("src/**/*.nim")
+    doAssert "src/dir/foo.nim".matches("src/**/*.nim", isDos = false)
 
   input.contains(globToRegex(pattern, isDos))
 
