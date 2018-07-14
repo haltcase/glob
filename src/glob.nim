@@ -191,7 +191,7 @@ type
     ## GlobOptions.FileLinks    yield links to files
     ## GlobOptions.FollowLinks  recurse into directories through links
     ## ==========================   ================================================
-    Relative, ExpandDirs, FollowLinks,               ## iterator behavior
+    Absolute, ExpandDirs, FollowLinks,               ## iterator behavior
     Hidden, Files, Directories, FileLinks, DirLinks  ## to yield or not to yield
 
   FilterDescend* = (path: string) -> bool
@@ -200,16 +200,16 @@ type
     ## recursion, while returning ``false`` will prevent it.
     ##
     ## ``path`` can either be relative or absolute, which depends on
-    ## ``GlobOptions.Relative`` being present in the iterator's options.
+    ## ``GlobOptions.Absolute`` being present in the iterator's options.
   FilterYield* = (path: string, kind: PathComponent) -> bool
     ## A predicate controlling whether or not to yield a filesystem item. Paths
     ## for which this predicate returns ``false`` will not be yielded.
     ##
     ## ``path`` can either be relative or absolute, which depends on
-    ## ``GlobOptions.Relative`` being present in the iterator's options.
+    ## ``GlobOptions.Absolute`` being present in the iterator's options.
     ## ``kind`` is one of ``pcDir``, ``pcFile``, ``pcLinkToDir``, ``pcLinkToFile``.
 
-const defaultGlobOptions* = {Relative, ExpandDirs, Files, FileLinks, DirLinks}
+const defaultGlobOptions* = {ExpandDirs, Files, FileLinks, DirLinks}
   ## The default options used when none are provided. If a new set is
   ## provided, it overrides the defaults entirely, so in order to partially
   ## modify the default options you can use Nim's ``set`` union and intersection
@@ -329,8 +329,8 @@ iterator walkGlobKinds* (
     if filterYield.isNil or filterYield(path, kind):
       yield (
         unixToNativePath(
-          if Relative in options and dir != "": path.toRelative(dir)
-          else: path
+          if Absolute in options or dir == "": path
+          else: path.toRelative(dir)
         ),
         kind
       )
@@ -376,7 +376,7 @@ iterator walkGlobKinds* (
           rel = path.toRelative(dir)
           isMatch = rel.matches(matcher)
           resultPath = unixToNativePath(
-            if Relative in options: base / rel else: path
+            if Absolute notin options: base / rel else: path
           )
 
         case kind
