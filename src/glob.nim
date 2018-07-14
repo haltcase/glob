@@ -179,19 +179,19 @@ type
     ## Flags that control the behavior or results of the file system iterators. See
     ## `defaultGlobOptions <#defaultGlobOptions>`_ for some usage & examples.
     ##
-    ## ============================  ======================================================
+    ## ============================  ===========================================================
     ##  flag                          meaning
-    ## ============================  ======================================================
+    ## ============================  ===========================================================
     ## ``GlobOptions.Absolute``      yield paths as absolute rather than relative to root
-    ## ``GlobOptions.ExpandDirs``    if pattern is a directory, treat it as ``<dir>/**/*``
+    ## ``GlobOptions.NoExpandDirs``  if pattern is a directory don't treat it as ``<dir>/**/*``
     ## ``GlobOptions.Hidden``        yield hidden files or directories
     ## ``GlobOptions.Directories``   yield directories
     ## ``GlobOptions.Files``         yield files
     ## ``GlobOptions.DirLinks``      yield links to directories
     ## ``GlobOptions.FileLinks``     yield links to files
     ## ``GlobOptions.FollowLinks``   recurse into directories through links
-    ## ============================  ======================================================
-    Absolute, ExpandDirs, FollowLinks,               ## iterator behavior
+    ## ============================  ===========================================================
+    Absolute, NoExpandDirs, FollowLinks,             ## iterator behavior
     Hidden, Files, Directories, FileLinks, DirLinks  ## to yield or not to yield
 
   FilterDescend* = (path: string) -> bool
@@ -209,7 +209,7 @@ type
     ## ``GlobOptions.Absolute`` being present in the iterator's options.
     ## ``kind`` is one of ``pcDir``, ``pcFile``, ``pcLinkToDir``, ``pcLinkToFile``.
 
-const defaultGlobOptions* = {ExpandDirs, Files, FileLinks, DirLinks}
+const defaultGlobOptions* = {Files, FileLinks, DirLinks}
   ## The default options used when none are provided. If a new set is
   ## provided, it overrides the defaults entirely, so in order to partially
   ## modify the default options you can use Nim's ``set`` union and intersection
@@ -357,7 +357,7 @@ iterator walkGlobKinds* (
         of pcDir, pcLinkToDir:
           if Directories in options and (k == pcDir or DirLinks in options):
             push(matchPattern, k, dir)
-          if ExpandDirs in options:
+          if NoExpandDirs notin options:
             proceed = true
             matchPattern &= "/**"
         of pcFile:
