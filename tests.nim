@@ -325,7 +325,7 @@ suite "pattern walking / listing":
         "temp" / "shallow.nim"
       ])
 
-    test "`includeDirs` adds matching directories to the results":
+    test "`Directories` includes matching directories in the results":
       let options = defaultGlobOptions + {Directories}
       check seqsEqual(toSeq(walkGlob("temp/**", options = options)), @[
         "temp" / "deep",
@@ -337,13 +337,16 @@ suite "pattern walking / listing":
         "temp" / "shallow.nim"
       ])
 
-    test "directories are expanded by default":
+    test "`NoExpandDirs` disables the default directory expansion behavior":
       check seqsEqual(toSeq(walkGlob("temp")), @[
         "temp" / "deep" / "dir" / "file.nim",
         "temp" / "not_as" / "deep.jpg",
         "temp" / "not_as" / "deep.nim",
         "temp" / "shallow.nim"
       ])
+
+      let options = defaultGlobOptions + {NoExpandDirs}
+      check toSeq(walkGlob("temp", options = options)).len == 0
 
     test "`Absolute` makes returned paths absolute":
       let options = defaultGlobOptions + {Absolute}
