@@ -389,7 +389,7 @@ iterator walkGlobKinds* (
           rel = path.toRelative(dir)
           isMatch = rel.matches(matcher)
           resultPath = unixToNativePath(
-            if Absolute notin options: base / rel else: path
+            if Absolute in options: path else: base / rel
           )
 
         case kind
