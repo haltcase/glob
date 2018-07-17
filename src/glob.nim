@@ -245,7 +245,9 @@ proc pathType (path: string, kind: var PathComponent): bool =
     discard
 
 proc maybeJoin (p1, p2: string): string =
-  if p2.isAbsolute: p2 else: p1 / p2
+  if p2 == "": p1
+  elif p2.isAbsolute: p2
+  else: p1 / p2
 
 proc globToRegex* (pattern: string, isDos = isDosDefault): Regex =
   ## Converts a string glob pattern to a regex pattern.
