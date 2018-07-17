@@ -174,24 +174,30 @@ type
     ## contains any path segments containing or following special glob
     ## characters.
 
-  GlobOptions* {.pure.} = enum
+  GlobOption* {.pure.} = enum
     ## Flags that control the behavior or results of the file system iterators. See
     ## `defaultGlobOptions <#defaultGlobOptions>`_ for some usage & examples.
     ##
     ## ============================  ===========================================================
     ##  flag                          meaning
     ## ============================  ===========================================================
-    ## ``GlobOptions.Absolute``      yield paths as absolute rather than relative to root
-    ## ``GlobOptions.NoExpandDirs``  if pattern is a directory don't treat it as ``<dir>/**/*``
-    ## ``GlobOptions.Hidden``        yield hidden files or directories
-    ## ``GlobOptions.Directories``   yield directories
-    ## ``GlobOptions.Files``         yield files
-    ## ``GlobOptions.DirLinks``      yield links to directories
-    ## ``GlobOptions.FileLinks``     yield links to files
-    ## ``GlobOptions.FollowLinks``   recurse into directories through links
+    ## ``GlobOption.Absolute``       yield paths as absolute rather than relative to root
+    ## ``GlobOption.NoExpandDirs``   if pattern is a directory don't treat it as ``<dir>/**/*``
+    ## ``GlobOption.Hidden``         yield hidden files or directories
+    ## ``GlobOption.Directories``    yield directories
+    ## ``GlobOption.Files``          yield files
+    ## ``GlobOption.DirLinks``       yield links to directories
+    ## ``GlobOption.FileLinks``      yield links to files
+    ## ``GlobOption.FollowLinks``    recurse into directories through links
     ## ============================  ===========================================================
     Absolute, NoExpandDirs, FollowLinks,             ## iterator behavior
     Hidden, Files, Directories, FileLinks, DirLinks  ## to yield or not to yield
+
+  GlobOptions* = set[GlobOption]
+    ## The ``set`` type containing flags for controlling glob behavior.
+    ## .. code-block: Nim
+    ##     var options: GlobOptions = {}
+    ##     if someCondition: options += GlobOption.Absolute
 
   FilterDescend* = (path: string) -> bool
     ## A predicate controlling whether or not to recurse into a directory when
@@ -199,13 +205,13 @@ type
     ## recursion, while returning ``false`` will prevent it.
     ##
     ## ``path`` can either be relative or absolute, which depends on
-    ## ``GlobOptions.Absolute`` being present in the iterator's options.
+    ## ``GlobOption.Absolute`` being present in the iterator's options.
   FilterYield* = (path: string, kind: PathComponent) -> bool
     ## A predicate controlling whether or not to yield a filesystem item. Paths
     ## for which this predicate returns ``false`` will not be yielded.
     ##
     ## ``path`` can either be relative or absolute, which depends on
-    ## ``GlobOptions.Absolute`` being present in the iterator's options.
+    ## ``GlobOption.Absolute`` being present in the iterator's options.
     ## ``kind`` is one of ``pcDir``, ``pcFile``, ``pcLinkToDir``, ``pcLinkToFile``.
 
 const defaultGlobOptions* = {Files, FileLinks, DirLinks}
@@ -431,7 +437,7 @@ iterator walkGlob* (
   ## yielding all those that match. ``root`` defaults to the current working
   ## directory (by using ``os.getCurrentDir``).
   ##
-  ## See `GlobOptions <#GlobOptions>`_ for the flags available to alter
+  ## See `GlobOption <#GlobOption>`_ for the flags available to alter
   ## iteration behavior and output.
   runnableExamples:
     for path in walkGlob("src/*.nim"):
