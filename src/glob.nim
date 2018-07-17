@@ -140,7 +140,6 @@ supported yet but will potentially be added in the future. This includes:
 
 import future
 import os
-import options
 from strutils import contains, endsWith, startsWith
 
 import regex
@@ -238,9 +237,10 @@ proc toRelative (path, dir: string): string =
   else:
     path
 
-proc pathType (path: string): Option[PathComponent] =
+proc pathType (path: string, kind: var PathComponent): bool =
   try:
-    result = some(path.getFileInfo.kind)
+    kind = path.getFileInfo.kind
+    result = true
   except:
     discard
 
@@ -349,21 +349,20 @@ iterator walkGlobKinds* (
       )
 
   if not proceed:
-    let kind = matchPattern.pathType
-    if not kind.isNone:
-      let k = kind.get()
+    var kind: PathComponent
+    if matchPattern.pathType(kind):
       if Hidden in options or not matchPattern.isHidden:
-        case k
+        case kind
         of pcDir, pcLinkToDir:
-          if Directories in options and (k == pcDir or DirLinks in options):
-            push(matchPattern, k, dir)
+          if Directories in options and (kind == pcDir or DirLinks in options):
+            push(matchPattern, kind, dir)
           if NoExpandDirs notin options:
             proceed = true
             matchPattern &= "/**"
         of pcFile:
-          push(matchPattern, k, dir)
+          if Files in options: push(matchPattern, kind, dir)
         of pcLinkToFile:
-          if FileLinks in options: push(matchPattern, k, dir)
+          if FileLinks in options: push(matchPattern, kind, dir)
 
   var base: string
   when pattern is Glob:
