@@ -146,10 +146,8 @@ import regex
 
 import glob/regexer
 
-when defined windows:
-  const isDosDefault = true
-else:
-  const isDosDefault = false
+const
+  isDosDefault = defined windows
 
 type
   Glob* = object
@@ -216,15 +214,18 @@ type
     ## ``GlobOption.Absolute`` being present in the iterator's options.
     ## ``kind`` is one of ``pcDir``, ``pcFile``, ``pcLinkToDir``, ``pcLinkToFile``.
 
-const defaultGlobOptions* = {Files, FileLinks, DirLinks}
-  ## The default options used when none are provided. If a new set is
-  ## provided, it overrides the defaults entirely, so in order to partially
-  ## modify the default options you can use Nim's ``set`` union and intersection
-  ## operators:
-  ##
-  ## .. code-block:: Nim
-  ##     const optsNoFiles = defaultGlobOptions - {Files}
-  ##     const optsHiddenNoLinks = defaultGlobOptions + {Hidden} - {FileLinks, DirLinks}
+when defined Nimdoc:
+  const defaultGlobOptions* = {Files, FileLinks, DirLinks}
+    ## The default options used when none are provided. If a new set is
+    ## provided it overrides the defaults entirely, so in order to partially
+    ## modify the default options you can use Nim's ``set`` union and intersection
+    ## operators:
+    ##
+    ## .. code-block:: nim
+    ##    const optsNoFiles = defaultGlobOptions - {Files}
+    ##    const optsHiddenNoLinks = defaultGlobOptions + {Hidden} - {FileLinks, DirLinks}
+else:
+  const defaultGlobOptions* = {Files, FileLinks, DirLinks}
 
 proc hasMagic* (str: string): bool =
   ## Returns ``true`` if the given string is glob-like, ie. if it contains any
