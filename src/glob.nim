@@ -228,7 +228,7 @@ when defined Nimdoc:
 else:
   const defaultGlobOptions* = {Files, FileLinks, DirLinks}
 
-proc hasMagic* (str: string): bool =
+func hasMagic* (str: string): bool =
   ## Returns ``true`` if the given string is glob-like, ie. if it contains any
   ## of the special characters ``*``, ``?``, ``[``, ``{`` or an ``extglob``
   ## which is one of the characters ``?``, ``!``, ``@``, ``+``, or ``*``
@@ -240,7 +240,7 @@ proc hasMagic* (str: string): bool =
 
   str.contains({'*', '?', '[', '{'}) or str.contains(re"[?!@+]\(")
 
-proc toRelative (path, dir: string): string =
+func toRelative (path, dir: string): string =
   if path.startsWith(dir):
     let start = dir.len + dir.endsWith(DirSep).not.int
     path[start..<path.len]
@@ -254,16 +254,16 @@ proc pathType (path: string, kind: var PathComponent): bool =
   except:
     discard
 
-proc maybeJoin (p1, p2: string): string =
+func maybeJoin (p1, p2: string): string =
   if p2 == "": p1
   elif p2.isAbsolute: p2
   else: p1 / p2
 
-proc globToRegex* (pattern: string, isDos = isDosDefault): Regex =
+func globToRegex* (pattern: string, isDos = isDosDefault): Regex =
   ## Converts a string glob pattern to a regex pattern.
   globToRegexString(pattern, isDos).toPattern
 
-proc splitPattern* (pattern: string): PatternStems =
+func splitPattern* (pattern: string): PatternStems =
   ## Splits the given pattern into two parts: the ``base`` which is the part
   ## containing no special glob characters and the ``magic`` which includes
   ## any path segments containing or following special glob characters.
@@ -286,7 +286,7 @@ proc splitPattern* (pattern: string): PatternStems =
   let start = if head.len == 0: head.len else: head.len + 1
   result = (head, pattern[start..<pattern.len])
 
-proc glob* (pattern: string, isDos = isDosDefault): Glob =
+func glob* (pattern: string, isDos = isDosDefault): Glob =
   ## Constructs a new `Glob <#Glob>`_ object from the given ``pattern``.
   let rgx = globToRegexString(pattern, isDos)
   let (base, magic) = pattern.splitPattern
@@ -298,7 +298,7 @@ proc glob* (pattern: string, isDos = isDosDefault): Glob =
     magic: magic
   )
 
-proc matches* (input: string, glob: Glob): bool =
+func matches* (input: string, glob: Glob): bool =
   ## Returns ``true`` if ``input`` is a match for the given ``glob`` object.
   runnableExamples:
     when defined posix:
@@ -312,7 +312,7 @@ proc matches* (input: string, glob: Glob): bool =
 
   input.contains(glob.regex)
 
-proc matches* (input, pattern: string; isDos = isDosDefault): bool =
+func matches* (input, pattern: string; isDos = isDosDefault): bool =
   ## Constructs a `Glob <#Glob>`_ object from the given ``pattern`` and returns
   ## ``true`` if ``input`` is a match. Shortcut for ``matches(input, glob(pattern, isDos))``.
   runnableExamples:
