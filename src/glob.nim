@@ -14,9 +14,9 @@ be platform specific due to differing path separator characters.
 Syntax
 ******
 
-=======  ===============  =============
+=======  ===============  =================================================================
  token    example          description
-=======  ===============  =============
+=======  ===============  =================================================================
 ``?``    ``?.nim``        acts as a wildcard, matching any single character
 ``*``    ``*.nim``        matches any string of any length until a path separator is found
 ``**``   ``**/license``   same as ``*`` but crosses path boundaries to any depth
@@ -24,7 +24,7 @@ Syntax
 ``{}``   ``{nim,js}``     string class (group), matches any of the strings inside
 ``/``    ``foo/*.js``     literal path separator (even on Windows)
 ``\``    ``foo\*.js``     escape character (not path separator, even on Windows)
-=======  ===============  =============
+=======  ===============  =================================================================
 
 Any other characters are matched literally. Make special note of the difference
 between ``/`` and ``\``. Even when on Windows platforms you should **not** use
@@ -57,24 +57,24 @@ Within bracket expressions (``[]``) you can use POSIX character classes,
 which are basically named groups of characters. These are the available
 classes and their roughly equivalent regex values:
 
-==================   ==========================================   ======================================================================
- POSIX class	        similar to                                   meaning
-==================   ==========================================   ======================================================================
-``[:upper:]``	       ``[A-Z]``	                                  uppercase letters
-``[:lower:]``	       ``[a-z]``	                                  lowercase letters
-``[:alpha:]``	       ``[A-Za-z]``                                 upper- and lowercase letters
-``[:digit:]``	       ``[0-9]``	                                  digits
-``[:xdigit:]``	     ``[0-9A-Fa-f]``	                            hexadecimal digits
-``[:alnum:]``	       ``[A-Za-z0-9]``                              digits, upper- and lowercase letters
-``[:word:]``         ``[A-Za-z0-9_]``                             alphanumeric and underscore
-``[:blank:]``	       ``[ \t]``	                                  space and TAB characters only
-``[:space:]``	       ``[ \t\n\r\f\v]``	                          blank (whitespace) characters
-``[:cntrl:]``        ``[\x00-\x1F\x7F]``                          control characters
-``[:ascii:]``        ``[\x00-\x7F]``                              ASCII characters
-``[:graph:]``	       ``[^ [:cntrl:]]``	                          graphic characters (all characters which have graphic representation)
-``[:punct:]``	       ``[!"\#$%&'()*+,-./:;<=>?@\[\]^_`{|}~]``     punctuation (all graphic characters except letters and digits)
-``[:print:]``	       ``[[:graph] ]``	                            graphic characters and space
-==================   ==========================================   ======================================================================
+==============  =========================================  ======================================================================
+ POSIX class     similar to                                  meaning
+==============  =========================================  ======================================================================
+``[:upper:]``   ``[A-Z]``                                  uppercase letters
+``[:lower:]``   ``[a-z]``                                  lowercase letters
+``[:alpha:]``   ``[A-Za-z]``                               upper- and lowercase letters
+``[:digit:]``   ``[0-9]``                                  digits
+``[:xdigit:]``  ``[0-9A-Fa-f]``                            hexadecimal digits
+``[:alnum:]``   ``[A-Za-z0-9]``                            digits, upper- and lowercase letters
+``[:word:]``    ``[A-Za-z0-9_]``                           alphanumeric and underscore
+``[:blank:]``   ``[ \t]``                                  space and TAB characters only
+``[:space:]``   ``[ \t\n\r\f\v]``                          blank (whitespace) characters
+``[:cntrl:]``   ``[\x00-\x1F\x7F]``                        control characters
+``[:ascii:]``   ``[\x00-\x7F]``                            ASCII characters
+``[:graph:]``   ``[^ [:cntrl:]]``                          graphic characters (all characters which have graphic representation)
+``[:punct:]``   ``[!"\#$%&'()*+,-./:;<=>?@\[\]^_`{|}~]``   punctuation (all graphic characters except letters and digits)
+``[:print:]``   ``[[:graph] ]``                            graphic characters and space
+==============  =========================================  ======================================================================
 
 Extended pattern matching
 #########################
@@ -82,12 +82,12 @@ Extended pattern matching
 ``glob`` supports most of the extended pattern matching syntax found under
 bash's ``extglob`` flag:
 
-===================  =======================================================
+===================  =====================================================
 ``?(...patterns)``   match zero or one occurrences of the given patterns
 ``*(...patterns)``   match zero or more occurrences of the given patterns
 ``+(...patterns)``   match one or more occurrences of the given patterns
 ``@(...patterns)``   match one of the given patterns
-===================  =======================================================
+===================  =====================================================
 
 Note that the ``!(...patterns)`` form that allows for matching anything *except*
 the given patterns is not currently supported. This is a limitation in the regex
@@ -112,16 +112,16 @@ For these examples let's imagine we have this file structure:
   │  └─ glob.nim
   └─ glob.nimble
 
-======================  ====================================================
- glob pattern            files returned
-======================  ====================================================
-``*``                   ``@["glob.nimble"]``
-``src/*.nim``           ``@["src/glob.nim"]``
-``src/**/*.nim``        ``@["src/glob.nim", "src/glob/other.nim",``
-                        ``"src/glob/regexer.nim", "src/glob/private/util.nim"]``
-``**/*.{ico,svg}``      ``@["assets/img/favicon.ico", "assets/img/logo.svg"]``
-``**/????.???``         ``@["src/glob.nim", "src/glob/private/util.nim", "assets/img/logo.svg"]``
-======================  ====================================================
+===================  ==========================================================================
+ glob pattern         files returned
+===================  ==========================================================================
+``*``                ``@["glob.nimble"]``
+``src/*.nim``        ``@["src/glob.nim"]``
+``src/**/*.nim``     ``@["src/glob.nim", "src/glob/other.nim",``
+                     ``"src/glob/regexer.nim", "src/glob/private/util.nim"]``
+``**/*.{ico,svg}``   ``@["assets/img/favicon.ico", "assets/img/logo.svg"]``
+``**/????.???``      ``@["src/glob.nim", "src/glob/private/util.nim", "assets/img/logo.svg"]``
+===================  ==========================================================================
 
 For more info on glob syntax see `this link <https://mywiki.wooledge.org/glob>`_
 for a good reference, although it references a few more extended features which
@@ -195,9 +195,10 @@ type
 
   GlobOptions* = set[GlobOption]
     ## The ``set`` type containing flags for controlling glob behavior.
-    ## .. code-block: Nim
-    ##     var options: GlobOptions = {}
-    ##     if someCondition: options += GlobOption.Absolute
+    ##
+    ## .. code-block:: nim
+    ##    var options: GlobOptions = {}
+    ##    if someCondition: options += GlobOption.Absolute
 
   FilterDescend* = (path: string) -> bool
     ## A predicate controlling whether or not to recurse into a directory when
@@ -206,6 +207,7 @@ type
     ##
     ## ``path`` can either be relative or absolute, which depends on
     ## ``GlobOption.Absolute`` being present in the iterator's options.
+
   FilterYield* = (path: string, kind: PathComponent) -> bool
     ## A predicate controlling whether or not to yield a filesystem item. Paths
     ## for which this predicate returns ``false`` will not be yielded.
@@ -435,7 +437,7 @@ iterator walkGlob* (
 ): string =
   ## Iterates over all the paths within the scope of the given glob ``pattern``,
   ## yielding all those that match. ``root`` defaults to the current working
-  ## directory (by using ``os.getCurrentDir``).
+  ## directory (by using `os.getCurrentDir <https://nim-lang.org/docs/os.html#getCurrentDir,>`_).
   ##
   ## See `GlobOption <#GlobOption>`_ for the flags available to alter
   ## iteration behavior and output.
@@ -449,6 +451,7 @@ iterator walkGlob* (
       ## `path` is a file in the `docs` directory or any of its
       ## subdirectories with either a `png` or `svg` file extension
       discard
+
   for path, _ in walkGlobKinds(pattern, root, options, filterDescend, filterYield):
     yield path
 
