@@ -259,6 +259,11 @@ func maybeJoin (p1, p2: string): string =
   elif p2.isAbsolute: p2
   else: p1 / p2
 
+func expandGlob (pattern: string): string =
+  if pattern.hasMagic: pattern
+  elif pattern.existsDir: pattern & "/**"
+  else: pattern
+
 func globToRegex* (pattern: string, isDos = isDosDefault): Regex =
   ## Converts a string glob pattern to a regex pattern.
   globToRegexString(pattern, isDos).toPattern
@@ -377,7 +382,7 @@ iterator walkGlobKinds* (
   when pattern is Glob:
     dir = maybeJoin(dir, pattern.base)
     base = pattern.base
-    matchPattern = pattern.magic
+    matchPattern = pattern.magic.expandGlob
   else:
     (base, matchPattern) = splitPattern(matchPattern)
     dir = maybeJoin(dir, base)
