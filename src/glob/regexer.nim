@@ -31,10 +31,8 @@ const
     "word": r"\w"
   }
 
-when defined windows:
-  const isDosDefault = true
-else:
-  const isDosDefault = false
+const
+  isDosDefault = defined windows
 
 proc getClassRegex (name: string): string =
   result = ""
