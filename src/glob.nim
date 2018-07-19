@@ -157,13 +157,14 @@ type
     base*: string
     magic*: string
     ## Represents a compiled glob pattern and its backing regex. Also stores
-    ## the glob's ``base`` & ``magic`` components as per the
+    ## the glob's ``base`` & ``magic`` components as given by the
     ## `splitPattern proc <#splitPattern,string>`_.
 
   GlobResult* =
     tuple[path: string, kind: PathComponent]
     ## The type yielded by the `walkGlobKinds iterator <#walkGlobKinds.i,string,string>`_,
-    ## containing the item's ``path`` and its ``kind`` - ie. ``pcFile``, ``pcDir``.
+    ## containing the item's ``path`` and its ``kind`` as an
+    ## `os.PathComponent <https://nim-lang.org/docs/os.html#PathComponent>`_.
 
   PatternStems* =
     tuple[base: string, magic: string]
@@ -212,7 +213,7 @@ type
     ##
     ## ``path`` can either be relative or absolute, which depends on
     ## ``GlobOption.Absolute`` being present in the iterator's options.
-    ## ``kind`` is one of ``pcDir``, ``pcFile``, ``pcLinkToDir``, ``pcLinkToFile``.
+    ## ``kind`` is an `os.PathComponent <https://nim-lang.org/docs/os.html#PathComponent>`_.
 
 when defined Nimdoc:
   const defaultGlobOptions* = {Files, FileLinks, DirLinks}
@@ -272,6 +273,7 @@ proc splitPattern* (pattern: string): PatternStems =
   ## be returned as ``magic``, while ``base`` will be the empty string ``""``.
   runnableExamples:
     doAssert "root_dir/inner/**/*.{jpg,gif}".splitPattern == ("root_dir/inner", "**/*.{jpg,gif}")
+    doAssert "this/is-a/literal-match.txt".splitPattern == ("", "this/is-a/literal-match.txt")
 
   if not pattern.hasMagic or not pattern.contains(re"[^\\]\/"):
     return ("", pattern)
@@ -298,30 +300,26 @@ proc glob* (pattern: string, isDos = isDosDefault): Glob =
 
 proc matches* (input: string, glob: Glob): bool =
   ## Returns ``true`` if ``input`` is a match for the given ``glob`` object.
-  ##
-  ## *Note: because globs are compiled to handle the current system's path separators
-  ## by default, to make these examples work cross-platform we provide the* ``isDos``
-  ## *parameter explicitly, but it can normally be left out.*
   runnableExamples:
-    const matcher1 = glob("src/**/*.nim", isDos = false)
-    doAssert("src/dir/foo.nim".matches(matcher1))
-    doAssert(not r"src\dir\foo.nim".matches(matcher1))
-
-    const matcher2 = glob("src/**/*.nim", isDos = true)
-    doAssert(r"src\dir\foo.nim".matches(matcher2))
-    doAssert(not "src/dir/foo.nim".matches(matcher2))
+    when defined posix:
+      const matcher = glob("src/**/*.nim")
+      doAssert("src/dir/foo.nim".matches(matcher))
+      doAssert(not r"src\dir\foo.nim".matches(matcher))
+    elif defined windows:
+      const matcher = glob("src/**/*.nim")
+      doAssert(r"src\dir\foo.nim".matches(matcher))
+      doAssert(not "src/dir/foo.nim".matches(matcher))
 
   input.contains(glob.regex)
 
 proc matches* (input, pattern: string; isDos = isDosDefault): bool =
   ## Constructs a `Glob <#Glob>`_ object from the given ``pattern`` and returns
   ## ``true`` if ``input`` is a match. Shortcut for ``matches(input, glob(pattern, isDos))``.
-  ##
-  ## *Note: because globs are compiled to handle the current system's path separators
-  ## by default, to make these examples work cross-platform we provide the* ``isDos``
-  ## *parameter explicitly, but it can normally be left out.*
   runnableExamples:
-    doAssert "src/dir/foo.nim".matches("src/**/*.nim", isDos = false)
+    when defined posix:
+      doAssert "src/dir/foo.nim".matches("src/**/*.nim")
+    elif defined windows:
+      doAssert r"src\dir\foo.nim".matches("src/**/*.nim")
 
   input.contains(globToRegex(pattern, isDos))
 
@@ -342,7 +340,7 @@ iterator walkGlobKinds* (
     ## include hidden items, exclude links
     const optsHiddenNoLinks = defaultGlobOptions + {Hidden} - {FileLinks, DirLinks}
     for path, kind in walkGlobKinds("src/**/*", options = options):
-      doAssert kind isnot pcFile
+      doAssert kind notin {pcLinkToFile, pcLinkToDir}
 
   var
     dir = if root == "": getCurrentDir() else: root
