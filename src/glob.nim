@@ -345,6 +345,8 @@ func makeCaseInsensitive (pattern: string): string =
     else:
       result.add c
 
+# helper to find file system items case insensitively
+# on case insensitive systems this is equivalent an existence check
 iterator initStack (
   pattern: string,
   kinds = {pcFile, pcLinkToFile, pcDir, pcLinkToDir},
