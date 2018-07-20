@@ -353,7 +353,7 @@ iterator initStack (
 ): tuple[kind: PathComponent, path: string] =
   template push (path: string) =
     var kind: PathComponent
-    if path.pathType(kind): yield (kind, path)
+    if path.pathType(kind) and kind in kinds: yield (kind, path)
 
   when FileSystemCaseSensitive:
     if ignoreCase:
