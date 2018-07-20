@@ -222,7 +222,14 @@ proc splitPattern* (pattern: string): PatternStems =
 
 proc glob* (pattern: string, isDos = isDosDefault): Glob =
   ## Constructs a new `Glob <#Glob>`_ object from the given ``pattern``.
-  let rgx = globToRegexString(pattern, isDos)
+  var rgx = globToRegexString(pattern, isDos)
+
+  # TODO: proper handling: allow user to pass in flag
+  var caseSensitive = true
+  when defined(macosx): # TODO: ospaths.FileSystemCaseSensitive
+    caseSensitive = false
+  if not caseSensitive:
+    rgx = "(?i:" & rgx & ")"
   let (base, magic) = pattern.splitPattern
   result = Glob(
     pattern: pattern,
