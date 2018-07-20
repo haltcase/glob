@@ -131,8 +131,8 @@ might also be useful.
 Roadmap
 *******
 
-There are a few more extended glob features and other capabilities which aren't
-supported yet but will potentially be added in the future. This includes:
+There may be some features and other capabilities which aren't supported yet but
+will potentially be added in the future, for example:
 
 - unicode character support
 - multiple patterns (something like ``glob(["*.nim", "!foo.nim"])``)
