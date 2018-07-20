@@ -162,11 +162,10 @@ type
     ## the glob's ``base`` & ``magic`` components as given by the
     ## `splitPattern proc <#splitPattern,string>`_.
 
-  GlobResult* =
+  GlobEntry* =
     tuple[path: string, kind: PathComponent]
-    ## The type yielded by the `walkGlobKinds iterator <#walkGlobKinds.i,string,string>`_,
-    ## containing the item's ``path`` and its ``kind`` as an
-    ## `os.PathComponent <https://nim-lang.org/docs/os.html#PathComponent>`_.
+    ## Represents a filesystem entity matched by a glob pattern, containing the
+    ## item's ``path`` and its ``kind`` as an `os.PathComponent <https://nim-lang.org/docs/os.html#PathComponent>`_.
 
   PatternStems* =
     tuple[base: string, magic: string]
@@ -379,9 +378,9 @@ iterator walkGlobKinds* (
   options = defaultGlobOptions,
   filterDescend: FilterDescend = nil,
   filterYield: FilterYield = nil
-): GlobResult =
+): GlobEntry =
   ## Equivalent to `walkGlob <#walkGlob.i,,string,FilterDescend,FilterYield>`_ but
-  ## yields a `GlobResult <#GlobResult>`_ which contains the ``path`` as well as
+  ## yields a `GlobEntry <#GlobEntry>`_ which contains the ``path`` as well as
   ## the ``kind`` of the item.
   runnableExamples:
     for path, kind in walkGlobKinds("src/*.nim"):
