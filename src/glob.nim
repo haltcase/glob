@@ -337,8 +337,7 @@ func matches* (input, pattern: string; isDos = isDosDefault, ignoreCase = isDosD
 func makeCaseInsensitive (pattern: string): string =
   result = ""
   for c in pattern:
-    let isLetter = c in Letters
-    if isLetter:
+    if c in Letters:
       result.add '['
       result.add c.toLowerAscii
       result.add c.toUpperAscii
