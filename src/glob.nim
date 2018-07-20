@@ -282,10 +282,10 @@ iterator initStack (
   pattern: string,
   kinds = {pcFile, pcLinkToFile, pcDir, pcLinkToDir},
   ignoreCase = false
-): tuple[kind: PathComponent, path: string] =
+): GlobEntry =
   template push (path: string) =
     var kind: PathComponent
-    if path.pathType(kind) and kind in kinds: yield (kind, path)
+    if path.pathType(kind) and kind in kinds: yield (path, kind)
 
   when FileSystemCaseSensitive:
     if ignoreCase:
@@ -299,7 +299,7 @@ iterator initStack (
 func expandGlob (pattern: string, ignoreCase: bool): string =
   if pattern.hasMagic: return pattern
 
-  for _, path in initStack(pattern, {pcDir, pcLinkToDir}, ignoreCase):
+  for path, _ in initStack(pattern, {pcDir, pcLinkToDir}, ignoreCase):
     # we can't easily check a file's existence case insensitively on case
     # sensitive systems, so (when necessary) walk over a case insensitive
     # version of this pattern until we find a matching directory and
@@ -406,7 +406,7 @@ iterator walkGlobKinds* (
       )
 
   if not proceed:
-    for kind, path in initStack(matchPattern, ignoreCase = IgnoreCase in options):
+    for path, kind in initStack(matchPattern, ignoreCase = IgnoreCase in options):
       if Hidden notin options and path.isHidden: continue
 
       case kind
@@ -437,7 +437,7 @@ iterator walkGlobKinds* (
     var stack = toSeq(initStack(dir, {pcDir, pcLinkToDir}, IgnoreCase in options))
     var last = dir
     while stack.len > 0:
-      let (_, subdir) = stack.pop
+      let (subdir, _) = stack.pop
       for kind, path in walkDir(subdir):
         if Hidden notin options and path.isHidden: continue
 
@@ -461,13 +461,13 @@ iterator walkGlobKinds* (
             last = subdir
 
             if isRec and (filterDescend.isNil or filterDescend(resultPath)):
-              stack.add((kind, path))
+              stack.add((path, kind))
         of pcDir:
           if Directories in options and isMatch:
             push(resultPath, kind)
 
           if isRec and (filterDescend.isNil or filterDescend(resultPath)):
-            stack.add((kind, path))
+            stack.add((path, kind))
         of pcLinkToFile:
           if FileLinks in options and isMatch:
             push(resultPath, kind)
