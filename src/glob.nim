@@ -140,7 +140,8 @@ supported yet but will potentially be added in the future. This includes:
 
 import future
 import os
-from strutils import contains, endsWith, startsWith
+import strutils
+from sequtils import toSeq
 
 import regex
 
@@ -181,6 +182,7 @@ type
     ##  flag                          meaning
     ## ============================  ===========================================================
     ## ``GlobOption.Absolute``       yield paths as absolute rather than relative to root
+    ## ``GlobOption.IgnoreCase``     matching will ignore case differences
     ## ``GlobOption.NoExpandDirs``   if pattern is a directory don't treat it as ``<dir>/**/*``
     ## ``GlobOption.Hidden``         yield hidden files or directories
     ## ``GlobOption.Directories``    yield directories
@@ -189,8 +191,8 @@ type
     ## ``GlobOption.FileLinks``      yield links to files
     ## ``GlobOption.FollowLinks``    recurse into directories through links
     ## ============================  ===========================================================
-    Absolute, NoExpandDirs, FollowLinks,             ## iterator behavior
-    Hidden, Files, Directories, FileLinks, DirLinks  ## to yield or not to yield
+    Absolute, IgnoreCase, NoExpandDirs, FollowLinks,  ## iterator behavior
+    Hidden, Files, Directories, FileLinks, DirLinks   ## to yield or not to yield
 
   GlobOptions* = set[GlobOption]
     ## The ``set`` type containing flags for controlling glob behavior.
@@ -225,6 +227,10 @@ when defined Nimdoc:
     ## .. code-block:: nim
     ##    const optsNoFiles = defaultGlobOptions - {Files}
     ##    const optsHiddenNoLinks = defaultGlobOptions + {Hidden} - {FileLinks, DirLinks}
+    ##
+    ## On Windows systems, this also includes ``GlobOption.IgnoreCase``.
+elif defined windows:
+  const defaultGlobOptions* = {Files, FileLinks, DirLinks, IgnoreCase}
 else:
   const defaultGlobOptions* = {Files, FileLinks, DirLinks}
 
@@ -264,9 +270,9 @@ func expandGlob (pattern: string): string =
   elif pattern.existsDir: pattern & "/**"
   else: pattern
 
-func globToRegex* (pattern: string, isDos = isDosDefault): Regex =
+func globToRegex* (pattern: string, isDos = isDosDefault, ignoreCase = isDosDefault): Regex =
   ## Converts a string glob pattern to a regex pattern.
-  globToRegexString(pattern, isDos).toPattern
+  globToRegexString(pattern, isDos, ignoreCase).toPattern
 
 func splitPattern* (pattern: string): PatternStems =
   ## Splits the given pattern into two parts: the ``base`` which is the part
@@ -291,9 +297,9 @@ func splitPattern* (pattern: string): PatternStems =
   let start = if head.len == 0: head.len else: head.len + 1
   result = (head, pattern[start..<pattern.len])
 
-func glob* (pattern: string, isDos = isDosDefault): Glob =
+func glob* (pattern: string, isDos = isDosDefault, ignoreCase = isDosDefault): Glob =
   ## Constructs a new `Glob <#Glob>`_ object from the given ``pattern``.
-  let rgx = globToRegexString(pattern, isDos)
+  let rgx = globToRegexString(pattern, isDos, ignoreCase)
   let (base, magic) = pattern.splitPattern
   result = Glob(
     pattern: pattern,
@@ -317,16 +323,46 @@ func matches* (input: string, glob: Glob): bool =
 
   input.contains(glob.regex)
 
-func matches* (input, pattern: string; isDos = isDosDefault): bool =
-  ## Constructs a `Glob <#Glob>`_ object from the given ``pattern`` and returns
-  ## ``true`` if ``input`` is a match. Shortcut for ``matches(input, glob(pattern, isDos))``.
+func matches* (input, pattern: string; isDos = isDosDefault, ignoreCase = isDosDefault): bool =
+  ## Constructs a `Glob <#Glob>`_ object from the given ``pattern`` and returns ``true``
+  ## if ``input`` is a match. Shortcut for ``matches(input, glob(pattern, isDos, ignoreCase))``.
   runnableExamples:
     when defined posix:
       doAssert "src/dir/foo.nim".matches("src/**/*.nim")
     elif defined windows:
       doAssert r"src\dir\foo.nim".matches("src/**/*.nim")
 
-  input.contains(globToRegex(pattern, isDos))
+  input.contains(globToRegex(pattern, isDos, ignoreCase))
+
+func makeCaseInsensitive (pattern: string): string =
+  result = ""
+  for c in pattern:
+    let isLetter = c in Letters
+    if isLetter:
+      result.add '['
+      result.add c.toLowerAscii
+      result.add c.toUpperAscii
+      result.add ']'
+    else:
+      result.add c
+
+iterator initStack (
+  pattern: string,
+  kinds = {pcFile, pcLinkToFile, pcDir, pcLinkToDir},
+  ignoreCase = false
+): tuple[kind: PathComponent, path: string] =
+  template push (path: string) =
+    var kind: PathComponent
+    if path.pathType(kind): yield (kind, path)
+
+  when FileSystemCaseSensitive:
+    if ignoreCase:
+      for path in walkPattern(pattern.makeCaseInsensitive):
+        push path
+    else:
+      push pattern
+  else:
+    push pattern
 
 iterator walkGlobKinds* (
   pattern: string | Glob,
@@ -347,62 +383,61 @@ iterator walkGlobKinds* (
     for path, kind in walkGlobKinds("src/**/*", options = options):
       doAssert kind notin {pcLinkToFile, pcLinkToDir}
 
-  var
-    dir = if root == "": getCurrentDir() else: root
-    matchPattern = when pattern is Glob: pattern.pattern else: pattern
-    proceed = matchPattern.hasMagic
+  let internalRoot = if root == "": getCurrentDir() else: root
+  var matchPattern = when pattern is Glob: pattern.pattern else: pattern
+  var proceed = matchPattern.hasMagic
 
   template push (path: string, kind: PathComponent, dir = "") =
     if filterYield.isNil or filterYield(path, kind):
       yield (
         unixToNativePath(
-          if Absolute in options or dir == "": path
+          if Absolute in options or dir == "": maybeJoin(dir, path)
           else: path.toRelative(dir)
         ),
         kind
       )
 
   if not proceed:
-    var kind: PathComponent
-    if matchPattern.pathType(kind):
-      if Hidden in options or not matchPattern.isHidden:
-        case kind
-        of pcDir, pcLinkToDir:
-          if Directories in options and (kind == pcDir or DirLinks in options):
-            push(matchPattern, kind, dir)
-          if NoExpandDirs notin options:
-            proceed = true
-            matchPattern &= "/**"
-        of pcFile:
-          if Files in options: push(matchPattern, kind, dir)
-        of pcLinkToFile:
-          if FileLinks in options: push(matchPattern, kind, dir)
+    for kind, path in initStack(matchPattern, ignoreCase = IgnoreCase in options):
+      if Hidden notin options and path.isHidden: continue
 
-  var base: string
+      case kind
+      of pcDir, pcLinkToDir:
+        if Directories in options and (kind == pcDir or DirLinks in options):
+          push(path, kind, internalRoot)
+        if NoExpandDirs notin options:
+          proceed = true
+          matchPattern &= "/**"
+      of pcFile:
+        if Files in options: push(path, kind, internalRoot)
+      of pcLinkToFile:
+        if FileLinks in options: push(path, kind, internalRoot)
+
+  var dir: string
   when pattern is Glob:
-    dir = maybeJoin(dir, pattern.base)
-    base = pattern.base
+    dir = maybeJoin(internalRoot, pattern.base)
     matchPattern = pattern.magic.expandGlob
   else:
-    (base, matchPattern) = splitPattern(matchPattern)
-    dir = maybeJoin(dir, base)
+    let stems = splitPattern(matchPattern)
+    dir = maybeJoin(internalRoot, stems.base)
+    matchPattern = stems.magic
 
   if proceed:
-    let matcher = matchPattern.glob
-    let isRec = matchPattern.contains("**")
+    let matcher = matchPattern.globToRegex(ignoreCase = IgnoreCase in options)
+    let isRec = "**" in matchPattern
 
-    var stack = @[dir]
+    var stack = toSeq(initStack(dir, {pcDir, pcLinkToDir}, IgnoreCase in options))
     var last = dir
     while stack.len > 0:
-      let subdir = stack.pop
+      let (_, subdir) = stack.pop
       for kind, path in walkDir(subdir):
         if Hidden notin options and path.isHidden: continue
 
         let
           rel = path.toRelative(dir)
-          isMatch = rel.matches(matcher)
+          isMatch = matcher in rel
           resultPath = unixToNativePath(
-            if Absolute in options: path else: base / rel
+            if Absolute in options: path else: path.toRelative(internalRoot)
           )
 
         case kind
@@ -418,13 +453,13 @@ iterator walkGlobKinds* (
             last = subdir
 
             if isRec and (filterDescend.isNil or filterDescend(resultPath)):
-              stack.add(path)
+              stack.add((kind, path))
         of pcDir:
           if Directories in options and isMatch:
             push(resultPath, kind)
 
           if isRec and (filterDescend.isNil or filterDescend(resultPath)):
-            stack.add(path)
+            stack.add((kind, path))
         of pcLinkToFile:
           if FileLinks in options and isMatch:
             push(resultPath, kind)
