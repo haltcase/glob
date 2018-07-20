@@ -1261,7 +1261,7 @@ function main() {
     title="PatternStems = tuple[base: string, magic: string]"><wbr />Pattern<wbr />Stems<span class="attachedType" style="visibility:hidden"></span></a></li>
   <li><a class="reference" href="#GlobOption"
     title="GlobOption = enum
-  Absolute, NoExpandDirs, FollowLinks, ## iterator behavior
+  Absolute, IgnoreCase, NoExpandDirs, FollowLinks, ## iterator behavior
   Hidden, Files, Directories, FileLinks, DirLinks ## to yield or not to yield"><wbr />Glob<wbr />Option<span class="attachedType" style="visibility:hidden"></span></a></li>
   <li><a class="reference" href="#GlobOptions"
     title="GlobOptions = set[GlobOption]"><wbr />Glob<wbr />Options<span class="attachedType" style="visibility:hidden"></span></a></li>
@@ -1281,20 +1281,20 @@ function main() {
   </ul>
 </li>
 <li>
-  <a class="reference reference-toplevel" href="#12" id="62">Procs</a>
+  <a class="reference reference-toplevel" href="#13" id="63">Funcs</a>
   <ul class="simple simple-toc-section">
       <li><a class="reference" href="#hasMagic,string"
     title="hasMagic(str: string): bool"><wbr />has<wbr />Magic<span class="attachedType" style="visibility:hidden"></span></a></li>
   <li><a class="reference" href="#globToRegex,string"
-    title="globToRegex(pattern: string; isDos = isDosDefault): Regex"><wbr />glob<wbr />To<wbr />Regex<span class="attachedType" style="visibility:hidden"></span></a></li>
+    title="globToRegex(pattern: string; isDos = isDosDefault; ignoreCase = isDosDefault): Regex"><wbr />glob<wbr />To<wbr />Regex<span class="attachedType" style="visibility:hidden"></span></a></li>
   <li><a class="reference" href="#splitPattern,string"
     title="splitPattern(pattern: string): PatternStems"><wbr />split<wbr />Pattern<span class="attachedType" style="visibility:hidden">PatternStems</span></a></li>
   <li><a class="reference" href="#glob,string"
-    title="glob(pattern: string; isDos = isDosDefault): Glob"><wbr />glob<span class="attachedType" style="visibility:hidden">Glob</span></a></li>
+    title="glob(pattern: string; isDos = isDosDefault; ignoreCase = isDosDefault): Glob"><wbr />glob<span class="attachedType" style="visibility:hidden">Glob</span></a></li>
   <li><a class="reference" href="#matches,string,Glob"
     title="matches(input: string; glob: Glob): bool"><wbr />matches<span class="attachedType" style="visibility:hidden">Glob</span></a></li>
   <li><a class="reference" href="#matches,string,string"
-    title="matches(input, pattern: string; isDos = isDosDefault): bool"><wbr />matches<span class="attachedType" style="visibility:hidden"></span></a></li>
+    title="matches(input, pattern: string; isDos = isDosDefault; ignoreCase = isDosDefault): bool"><wbr />matches<span class="attachedType" style="visibility:hidden"></span></a></li>
 
   </ul>
 </li>
@@ -1388,7 +1388,7 @@ function main() {
   <div class="section" id="6">
 <h1><a class="toc-backref" href="#6">Imports</a></h1>
 <dl class="item">
-<a class="reference external" href="future.html">future</a>, <a class="reference external" href="os.html">os</a>, <a class="reference external" href="strutils.html">strutils</a>, <a class="reference external" href="regex.html">regex</a>, <a class="reference external" href="glob/regexer.html">glob/regexer</a>
+<a class="reference external" href="future.html">future</a>, <a class="reference external" href="os.html">os</a>, <a class="reference external" href="strutils.html">strutils</a>, <a class="reference external" href="sequtils.html">sequtils</a>, <a class="reference external" href="regex.html">regex</a>, <a class="reference external" href="glob/regexer.html">glob/regexer</a>
 </dl></div>
 <div class="section" id="7">
 <h1><a class="toc-backref" href="#7">Types</a></h1>
@@ -1401,12 +1401,12 @@ function main() {
   <span class="Identifier">magic</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
 </pre></dt>
 <dd>
-Represents a compiled glob pattern and its backing regex. Also stores the glob's <tt class="docutils literal"><span class="pre">base</span></tt> &amp; <tt class="docutils literal"><span class="pre">magic</span></tt> components as per the <a class="reference external" href="#splitPattern,string">splitPattern proc</a>.
+Represents a compiled glob pattern and its backing regex. Also stores the glob's <tt class="docutils literal"><span class="pre">base</span></tt> &amp; <tt class="docutils literal"><span class="pre">magic</span></tt> components as given by the <a class="reference external" href="#splitPattern,string">splitPattern proc</a>.
 
 </dd>
 <dt id="GlobResult"><a name="GlobResult"></a><pre><span class="Identifier">GlobResult</span> <span class="Other">=</span> <span class="Keyword">tuple</span><span class="Other">[</span><span class="Identifier">path</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">kind</span><span class="Other">:</span> <span class="Identifier">PathComponent</span><span class="Other">]</span></pre></dt>
 <dd>
-The type yielded by the <a class="reference external" href="#walkGlobKinds.i,string,string">walkGlobKinds iterator</a>, containing the item's <tt class="docutils literal"><span class="pre">path</span></tt> and its <tt class="docutils literal"><span class="pre">kind</span></tt> - ie. <tt class="docutils literal"><span class="pre">pcFile</span></tt>, <tt class="docutils literal"><span class="pre">pcDir</span></tt>.
+The type yielded by the <a class="reference external" href="#walkGlobKinds.i,string,string">walkGlobKinds iterator</a>, containing the item's <tt class="docutils literal"><span class="pre">path</span></tt> and its <tt class="docutils literal"><span class="pre">kind</span></tt> as an <a class="reference external" href="https://nim-lang.org/docs/os.html#PathComponent">os.PathComponent</a>.
 
 </dd>
 <dt id="PatternStems"><a name="PatternStems"></a><pre><span class="Identifier">PatternStems</span> <span class="Other">=</span> <span class="Keyword">tuple</span><span class="Other">[</span><span class="Identifier">base</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">magic</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">]</span></pre></dt>
@@ -1415,11 +1415,12 @@ The type returned by <a class="reference external" href="#splitPattern,string">s
 
 </dd>
 <dt id="GlobOption"><a name="GlobOption"></a><pre><span class="Identifier">GlobOption</span> <span class="Other">=</span> <span class="Keyword">enum</span>
-  <span class="Identifier">Absolute</span><span class="Other">,</span> <span class="Identifier">NoExpandDirs</span><span class="Other">,</span> <span class="Identifier">FollowLinks</span><span class="Other">,</span> <span class="Comment">## iterator behavior</span>
+  <span class="Identifier">Absolute</span><span class="Other">,</span> <span class="Identifier">IgnoreCase</span><span class="Other">,</span> <span class="Identifier">NoExpandDirs</span><span class="Other">,</span> <span class="Identifier">FollowLinks</span><span class="Other">,</span> <span class="Comment">## iterator behavior</span>
   <span class="Identifier">Hidden</span><span class="Other">,</span> <span class="Identifier">Files</span><span class="Other">,</span> <span class="Identifier">Directories</span><span class="Other">,</span> <span class="Identifier">FileLinks</span><span class="Other">,</span> <span class="Identifier">DirLinks</span> <span class="Comment">## to yield or not to yield</span></pre></dt>
 <dd>
 Flags that control the behavior or results of the file system iterators. See <a class="reference external" href="#defaultGlobOptions">defaultGlobOptions</a> for some usage &amp; examples.<table border="1" class="docutils"><tr><th>flag</th><th>meaning</th></tr>
 <tr><td><tt class="docutils literal"><span class="pre">GlobOption.Absolute</span></tt></td><td>yield paths as absolute rather than relative to root</td></tr>
+<tr><td><tt class="docutils literal"><span class="pre">GlobOption.IgnoreCase</span></tt></td><td>matching will ignore case differences</td></tr>
 <tr><td><tt class="docutils literal"><span class="pre">GlobOption.NoExpandDirs</span></tt></td><td>if pattern is a directory don't treat it as <tt class="docutils literal"><span class="pre">&lt;dir&gt;/**/*</span></tt></td></tr>
 <tr><td><tt class="docutils literal"><span class="pre">GlobOption.Hidden</span></tt></td><td>yield hidden files or directories</td></tr>
 <tr><td><tt class="docutils literal"><span class="pre">GlobOption.Directories</span></tt></td><td>yield directories</td></tr>
@@ -1432,8 +1433,8 @@ Flags that control the behavior or results of the file system iterators. See <a 
 </dd>
 <dt id="GlobOptions"><a name="GlobOptions"></a><pre><span class="Identifier">GlobOptions</span> <span class="Other">=</span> <span class="Identifier">set</span><span class="Other">[</span><span class="Identifier">GlobOption</span><span class="Other">]</span></pre></dt>
 <dd>
-The <tt class="docutils literal"><span class="pre">set</span></tt> type containing flags for controlling glob behavior. .. code-block: Nim<blockquote><p>var options: GlobOptions = {} if someCondition: options += GlobOption.Absolute</p></blockquote>
-
+The <tt class="docutils literal"><span class="pre">set</span></tt> type containing flags for controlling glob behavior.<pre class="listing"><span class="Keyword">var</span> <span class="Identifier">options</span><span class="Punctuation">:</span> <span class="Identifier">GlobOptions</span> <span class="Operator">=</span> <span class="Punctuation">{</span><span class="Punctuation">}</span>
+<span class="Keyword">if</span> <span class="Identifier">someCondition</span><span class="Punctuation">:</span> <span class="Identifier">options</span> <span class="Operator">+=</span> <span class="Identifier">GlobOption</span><span class="Operator">.</span><span class="Identifier">Absolute</span></pre>
 
 </dd>
 <dt id="FilterDescend"><a name="FilterDescend"></a><pre><span class="Identifier">FilterDescend</span> <span class="Other">=</span> <span class="Other">(</span><span class="Identifier">path</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> <span class="Operator">-&gt;</span> <span class="Identifier">bool</span></pre></dt>
@@ -1446,7 +1447,7 @@ The <tt class="docutils literal"><span class="pre">set</span></tt> type containi
 <dt id="FilterYield"><a name="FilterYield"></a><pre><span class="Identifier">FilterYield</span> <span class="Other">=</span> <span class="Other">(</span><span class="Identifier">path</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">kind</span><span class="Other">:</span> <span class="Identifier">PathComponent</span><span class="Other">)</span> <span class="Operator">-&gt;</span> <span class="Identifier">bool</span></pre></dt>
 <dd>
 <p>A predicate controlling whether or not to yield a filesystem item. Paths for which this predicate returns <tt class="docutils literal"><span class="pre">false</span></tt> will not be yielded.</p>
-<p><tt class="docutils literal"><span class="pre">path</span></tt> can either be relative or absolute, which depends on <tt class="docutils literal"><span class="pre">GlobOption.Absolute</span></tt> being present in the iterator's options. <tt class="docutils literal"><span class="pre">kind</span></tt> is one of <tt class="docutils literal"><span class="pre">pcDir</span></tt>, <tt class="docutils literal"><span class="pre">pcFile</span></tt>, <tt class="docutils literal"><span class="pre">pcLinkToDir</span></tt>, <tt class="docutils literal"><span class="pre">pcLinkToFile</span></tt>.</p>
+<p><tt class="docutils literal"><span class="pre">path</span></tt> can either be relative or absolute, which depends on <tt class="docutils literal"><span class="pre">GlobOption.Absolute</span></tt> being present in the iterator's options. <tt class="docutils literal"><span class="pre">kind</span></tt> is an <a class="reference external" href="https://nim-lang.org/docs/os.html#PathComponent">os.PathComponent</a>.</p>
 
 
 </dd>
@@ -1457,16 +1458,17 @@ The <tt class="docutils literal"><span class="pre">set</span></tt> type containi
 <dl class="item">
 <dt id="defaultGlobOptions"><a name="defaultGlobOptions"></a><pre><span class="Identifier">defaultGlobOptions</span> <span class="Other">=</span> <span class="Other">{</span><span class="DecNumber">Files</span><span class="Other">,</span> <span class="DecNumber">FileLinks</span><span class="Other">,</span> <span class="DecNumber">DirLinks</span><span class="Other">}</span></pre></dt>
 <dd>
-The default options used when none are provided. If a new set is provided, it overrides the defaults entirely, so in order to partially modify the default options you can use Nim's <tt class="docutils literal"><span class="pre">set</span></tt> union and intersection operators:<pre class="listing"><span class="Keyword">const</span> <span class="Identifier">optsNoFiles</span> <span class="Operator">=</span> <span class="Identifier">defaultGlobOptions</span> <span class="Operator">-</span> <span class="Punctuation">{</span><span class="Identifier">Files</span><span class="Punctuation">}</span>
-<span class="Keyword">const</span> <span class="Identifier">optsHiddenNoLinks</span> <span class="Operator">=</span> <span class="Identifier">defaultGlobOptions</span> <span class="Operator">+</span> <span class="Punctuation">{</span><span class="Identifier">Hidden</span><span class="Punctuation">}</span> <span class="Operator">-</span> <span class="Punctuation">{</span><span class="Identifier">FileLinks</span><span class="Punctuation">,</span> <span class="Identifier">DirLinks</span><span class="Punctuation">}</span></pre>
+The default options used when none are provided. If a new set is provided it overrides the defaults entirely, so in order to partially modify the default options you can use Nim's <tt class="docutils literal"><span class="pre">set</span></tt> union and intersection operators:<pre class="listing"><span class="Keyword">const</span> <span class="Identifier">optsNoFiles</span> <span class="Operator">=</span> <span class="Identifier">defaultGlobOptions</span> <span class="Operator">-</span> <span class="Punctuation">{</span><span class="Identifier">Files</span><span class="Punctuation">}</span>
+<span class="Keyword">const</span> <span class="Identifier">optsHiddenNoLinks</span> <span class="Operator">=</span> <span class="Identifier">defaultGlobOptions</span> <span class="Operator">+</span> <span class="Punctuation">{</span><span class="Identifier">Hidden</span><span class="Punctuation">}</span> <span class="Operator">-</span> <span class="Punctuation">{</span><span class="Identifier">FileLinks</span><span class="Punctuation">,</span> <span class="Identifier">DirLinks</span><span class="Punctuation">}</span></pre><p>On Windows systems, this also includes <tt class="docutils literal"><span class="pre">GlobOption.IgnoreCase</span></tt>.</p>
+
 
 </dd>
 
 </dl></div>
-<div class="section" id="12">
-<h1><a class="toc-backref" href="#12">Procs</a></h1>
+<div class="section" id="13">
+<h1><a class="toc-backref" href="#13">Funcs</a></h1>
 <dl class="item">
-<dt id="hasMagic"><a name="hasMagic,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">hasMagic</span><span class="Other">(</span><span class="Identifier">str</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dt id="hasMagic"><a name="hasMagic,string"></a><pre><span class="Keyword">func</span> <span class="Identifier">hasMagic</span><span class="Other">(</span><span class="Identifier">str</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
 Returns <tt class="docutils literal"><span class="pre">true</span></tt> if the given string is glob-like, ie. if it contains any of the special characters <tt class="docutils literal"><span class="pre">*</span></tt>, <tt class="docutils literal"><span class="pre">?</span></tt>, <tt class="docutils literal"><span class="pre">[</span></tt>, <tt class="docutils literal"><span class="pre">{</span></tt> or an <tt class="docutils literal"><span class="pre">extglob</span></tt> which is one of the characters <tt class="docutils literal"><span class="pre">?</span></tt>, <tt class="docutils literal"><span class="pre">!</span></tt>, <tt class="docutils literal"><span class="pre">@</span></tt>, <tt class="docutils literal"><span class="pre">+</span></tt>, or <tt class="docutils literal"><span class="pre">*</span></tt> followed by <tt class="docutils literal"><span class="pre">(</span></tt>.
 <strong class="examples_text">Examples:</strong>
@@ -1475,52 +1477,55 @@ Returns <tt class="docutils literal"><span class="pre">true</span></tt> if the g
 <span class="Identifier">doAssert</span><span class="Other">(</span><span class="Keyword">not</span> <span class="StringLit">&quot;literal_match.html&quot;</span><span class="Other">.</span><span class="Identifier">hasMagic</span><span class="Other">)</span></pre>
 
 </dd>
-<dt id="globToRegex"><a name="globToRegex,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">globToRegex</span><span class="Other">(</span><span class="Identifier">pattern</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">isDos</span> <span class="Other">=</span> <span class="Identifier">isDosDefault</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Regex</span> <span class="Other pragmabegin">{.</span><div class="pragma">
+<dt id="globToRegex"><a name="globToRegex,string"></a><pre><span class="Keyword">func</span> <span class="Identifier">globToRegex</span><span class="Other">(</span><span class="Identifier">pattern</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">isDos</span> <span class="Other">=</span> <span class="Identifier">isDosDefault</span><span class="Other">;</span> <span class="Identifier">ignoreCase</span> <span class="Other">=</span> <span class="Identifier">isDosDefault</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Regex</span> <span class="Other pragmabegin">{.</span><div class="pragma">
     <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RegexError</span><span class="Other">,</span> <span class="Identifier">GlobSyntaxError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
 Converts a string glob pattern to a regex pattern.
 
 </dd>
-<dt id="splitPattern"><a name="splitPattern,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">splitPattern</span><span class="Other">(</span><span class="Identifier">pattern</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">PatternStems</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dt id="splitPattern"><a name="splitPattern,string"></a><pre><span class="Keyword">func</span> <span class="Identifier">splitPattern</span><span class="Other">(</span><span class="Identifier">pattern</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">PatternStems</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
 <p>Splits the given pattern into two parts: the <tt class="docutils literal"><span class="pre">base</span></tt> which is the part containing no special glob characters and the <tt class="docutils literal"><span class="pre">magic</span></tt> which includes any path segments containing or following special glob characters.</p>
 <p>When <tt class="docutils literal"><span class="pre">pattern</span></tt> is not glob-like, ie. <tt class="docutils literal"><span class="pre">pattern.hasMagic == false</span></tt>, it will be considered a literal matcher and the entire pattern will be returned as <tt class="docutils literal"><span class="pre">magic</span></tt>, while <tt class="docutils literal"><span class="pre">base</span></tt> will be the empty string <tt class="docutils literal"><span class="pre">&quot;&quot;</span></tt>.</p>
 
 <strong class="examples_text">Examples:</strong>
 <pre class="listing"><span class="Identifier">doAssert</span> <span class="StringLit">&quot;root_dir/inner/**/*.{jpg,gif}&quot;</span><span class="Other">.</span><span class="Identifier">splitPattern</span> <span class="Operator">==</span>
-    <span class="Other">(</span><span class="StringLit">&quot;root_dir/inner&quot;</span><span class="Other">,</span> <span class="StringLit">&quot;**/*.{jpg,gif}&quot;</span><span class="Other">)</span></pre>
+    <span class="Other">(</span><span class="StringLit">&quot;root_dir/inner&quot;</span><span class="Other">,</span> <span class="StringLit">&quot;**/*.{jpg,gif}&quot;</span><span class="Other">)</span>
+<span class="Identifier">doAssert</span> <span class="StringLit">&quot;this/is-a/literal-match.txt&quot;</span><span class="Other">.</span><span class="Identifier">splitPattern</span> <span class="Operator">==</span>
+    <span class="Other">(</span><span class="StringLit">&quot;&quot;</span><span class="Other">,</span> <span class="StringLit">&quot;this/is-a/literal-match.txt&quot;</span><span class="Other">)</span></pre>
 
 </dd>
-<dt id="glob"><a name="glob,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">glob</span><span class="Other">(</span><span class="Identifier">pattern</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">isDos</span> <span class="Other">=</span> <span class="Identifier">isDosDefault</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Glob</span> <span class="Other pragmabegin">{.</span><div class="pragma">
+<dt id="glob"><a name="glob,string"></a><pre><span class="Keyword">func</span> <span class="Identifier">glob</span><span class="Other">(</span><span class="Identifier">pattern</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">isDos</span> <span class="Other">=</span> <span class="Identifier">isDosDefault</span><span class="Other">;</span> <span class="Identifier">ignoreCase</span> <span class="Other">=</span> <span class="Identifier">isDosDefault</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Glob</span> <span class="Other pragmabegin">{.</span><div class="pragma">
     <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">GlobSyntaxError</span><span class="Other">,</span> <span class="Identifier">RegexError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
 Constructs a new <a class="reference external" href="#Glob">Glob</a> object from the given <tt class="docutils literal"><span class="pre">pattern</span></tt>.
 
 </dd>
-<dt id="matches"><a name="matches,string,Glob"></a><pre><span class="Keyword">proc</span> <span class="Identifier">matches</span><span class="Other">(</span><span class="Identifier">input</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">glob</span><span class="Other">:</span> <span class="Identifier">Glob</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dt id="matches"><a name="matches,string,Glob"></a><pre><span class="Keyword">func</span> <span class="Identifier">matches</span><span class="Other">(</span><span class="Identifier">input</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">glob</span><span class="Other">:</span> <span class="Identifier">Glob</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
-<p>Returns <tt class="docutils literal"><span class="pre">true</span></tt> if <tt class="docutils literal"><span class="pre">input</span></tt> is a match for the given <tt class="docutils literal"><span class="pre">glob</span></tt> object.</p>
-<p><em>Note: because globs are compiled to handle the current system's path separators by default, to make these examples work cross-platform we provide the</em> <tt class="docutils literal"><span class="pre">isDos</span></tt> <em>parameter explicitly, but it can normally be left out.</em></p>
-
+Returns <tt class="docutils literal"><span class="pre">true</span></tt> if <tt class="docutils literal"><span class="pre">input</span></tt> is a match for the given <tt class="docutils literal"><span class="pre">glob</span></tt> object.
 <strong class="examples_text">Examples:</strong>
-<pre class="listing"><span class="Keyword">const</span>
-  <span class="Identifier">matcher1</span> <span class="Other">=</span> <span class="Identifier">glob</span><span class="Other">(</span><span class="StringLit">&quot;src/**/*.nim&quot;</span><span class="Other">,</span> <span class="Identifier">isDos</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span>
-<span class="Identifier">doAssert</span><span class="Other">(</span><span class="StringLit">&quot;src/dir/foo.nim&quot;</span><span class="Other">.</span><span class="Identifier">matches</span><span class="Other">(</span><span class="Identifier">matcher1</span><span class="Other">)</span><span class="Other">)</span>
-<span class="Identifier">doAssert</span><span class="Other">(</span><span class="Keyword">not</span> <span class="StringLit">r&quot;src\dir\foo.nim&quot;</span><span class="Other">.</span><span class="Identifier">matches</span><span class="Other">(</span><span class="Identifier">matcher1</span><span class="Other">)</span><span class="Other">)</span>
-<span class="Keyword">const</span>
-  <span class="Identifier">matcher2</span> <span class="Other">=</span> <span class="Identifier">glob</span><span class="Other">(</span><span class="StringLit">&quot;src/**/*.nim&quot;</span><span class="Other">,</span> <span class="Identifier">isDos</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">)</span>
-<span class="Identifier">doAssert</span><span class="Other">(</span><span class="StringLit">r&quot;src\dir\foo.nim&quot;</span><span class="Other">.</span><span class="Identifier">matches</span><span class="Other">(</span><span class="Identifier">matcher2</span><span class="Other">)</span><span class="Other">)</span>
-<span class="Identifier">doAssert</span><span class="Other">(</span><span class="Keyword">not</span> <span class="StringLit">&quot;src/dir/foo.nim&quot;</span><span class="Other">.</span><span class="Identifier">matches</span><span class="Other">(</span><span class="Identifier">matcher2</span><span class="Other">)</span><span class="Other">)</span></pre>
+<pre class="listing"><span class="Keyword">when</span> <span class="Identifier">defined</span> <span class="Identifier">posix</span><span class="Other">:</span>
+  <span class="Keyword">const</span>
+    <span class="Identifier">matcher</span> <span class="Other">=</span> <span class="Identifier">glob</span><span class="Other">(</span><span class="StringLit">&quot;src/**/*.nim&quot;</span><span class="Other">)</span>
+  <span class="Identifier">doAssert</span><span class="Other">(</span><span class="StringLit">&quot;src/dir/foo.nim&quot;</span><span class="Other">.</span><span class="Identifier">matches</span><span class="Other">(</span><span class="Identifier">matcher</span><span class="Other">)</span><span class="Other">)</span>
+  <span class="Identifier">doAssert</span><span class="Other">(</span><span class="Keyword">not</span> <span class="StringLit">r&quot;src\dir\foo.nim&quot;</span><span class="Other">.</span><span class="Identifier">matches</span><span class="Other">(</span><span class="Identifier">matcher</span><span class="Other">)</span><span class="Other">)</span>
+<span class="Keyword">elif</span> <span class="Identifier">defined</span> <span class="Identifier">windows</span><span class="Other">:</span>
+  <span class="Keyword">const</span>
+    <span class="Identifier">matcher</span> <span class="Other">=</span> <span class="Identifier">glob</span><span class="Other">(</span><span class="StringLit">&quot;src/**/*.nim&quot;</span><span class="Other">)</span>
+  <span class="Identifier">doAssert</span><span class="Other">(</span><span class="StringLit">r&quot;src\dir\foo.nim&quot;</span><span class="Other">.</span><span class="Identifier">matches</span><span class="Other">(</span><span class="Identifier">matcher</span><span class="Other">)</span><span class="Other">)</span>
+  <span class="Identifier">doAssert</span><span class="Other">(</span><span class="Keyword">not</span> <span class="StringLit">&quot;src/dir/foo.nim&quot;</span><span class="Other">.</span><span class="Identifier">matches</span><span class="Other">(</span><span class="Identifier">matcher</span><span class="Other">)</span><span class="Other">)</span></pre>
 
 </dd>
-<dt id="matches"><a name="matches,string,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">matches</span><span class="Other">(</span><span class="Identifier">input</span><span class="Other">,</span> <span class="Identifier">pattern</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">isDos</span> <span class="Other">=</span> <span class="Identifier">isDosDefault</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Other pragmabegin">{.</span><div class="pragma">
+<dt id="matches"><a name="matches,string,string"></a><pre><span class="Keyword">func</span> <span class="Identifier">matches</span><span class="Other">(</span><span class="Identifier">input</span><span class="Other">,</span> <span class="Identifier">pattern</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">isDos</span> <span class="Other">=</span> <span class="Identifier">isDosDefault</span><span class="Other">;</span> <span class="Identifier">ignoreCase</span> <span class="Other">=</span> <span class="Identifier">isDosDefault</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Other pragmabegin">{.</span><div class="pragma">
     <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RegexError</span><span class="Other">,</span> <span class="Identifier">GlobSyntaxError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
-<p>Constructs a <a class="reference external" href="#Glob">Glob</a> object from the given <tt class="docutils literal"><span class="pre">pattern</span></tt> and returns <tt class="docutils literal"><span class="pre">true</span></tt> if <tt class="docutils literal"><span class="pre">input</span></tt> is a match. Shortcut for <tt class="docutils literal"><span class="pre">matches(input, glob(pattern, isDos))</span></tt>.</p>
-<p><em>Note: because globs are compiled to handle the current system's path separators by default, to make these examples work cross-platform we provide the</em> <tt class="docutils literal"><span class="pre">isDos</span></tt> <em>parameter explicitly, but it can normally be left out.</em></p>
-
+Constructs a <a class="reference external" href="#Glob">Glob</a> object from the given <tt class="docutils literal"><span class="pre">pattern</span></tt> and returns <tt class="docutils literal"><span class="pre">true</span></tt> if <tt class="docutils literal"><span class="pre">input</span></tt> is a match. Shortcut for <tt class="docutils literal"><span class="pre">matches(input, glob(pattern, isDos, ignoreCase))</span></tt>.
 <strong class="examples_text">Examples:</strong>
-<pre class="listing"><span class="Identifier">doAssert</span> <span class="StringLit">&quot;src/dir/foo.nim&quot;</span><span class="Other">.</span><span class="Identifier">matches</span><span class="Other">(</span><span class="StringLit">&quot;src/**/*.nim&quot;</span><span class="Other">,</span> <span class="Identifier">isDos</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span></pre>
+<pre class="listing"><span class="Keyword">when</span> <span class="Identifier">defined</span> <span class="Identifier">posix</span><span class="Other">:</span>
+  <span class="Identifier">doAssert</span> <span class="StringLit">&quot;src/dir/foo.nim&quot;</span><span class="Other">.</span><span class="Identifier">matches</span><span class="Other">(</span><span class="StringLit">&quot;src/**/*.nim&quot;</span><span class="Other">)</span>
+<span class="Keyword">elif</span> <span class="Identifier">defined</span> <span class="Identifier">windows</span><span class="Other">:</span>
+  <span class="Identifier">doAssert</span> <span class="StringLit">r&quot;src\dir\foo.nim&quot;</span><span class="Other">.</span><span class="Identifier">matches</span><span class="Other">(</span><span class="StringLit">&quot;src/**/*.nim&quot;</span><span class="Other">)</span></pre>
 
 </dd>
 
@@ -1542,13 +1547,13 @@ Equivalent to <a class="reference external" href="#walkGlob.i,,string,FilterDesc
       <span class="Other">{</span><span class="Identifier">Hidden</span><span class="Other">}</span> <span class="Operator">-</span> <span class="Other">{</span><span class="Identifier">FileLinks</span><span class="Other">,</span> <span class="Identifier">DirLinks</span><span class="Other">}</span>
 <span class="Keyword">for</span> <span class="Identifier">path</span><span class="Other">,</span> <span class="Identifier">kind</span> <span class="Keyword">in</span> <span class="Identifier">walkGlobKinds</span><span class="Other">(</span><span class="StringLit">&quot;src/**/*&quot;</span><span class="Other">,</span> <span class="Identifier">options</span> <span class="Other">=</span> <span class="Identifier">options</span><span class="Other">)</span><span class="Other">:</span>
   <span class="Identifier">doAssert</span>
-    <span class="Identifier">not</span><span class="Other">(</span><span class="Identifier">kind</span> <span class="Identifier">is</span> <span class="Identifier">pcFile</span><span class="Other">)</span></pre>
+    <span class="Identifier">not</span><span class="Identifier">contains</span><span class="Other">(</span><span class="Other">{</span><span class="Identifier">pcLinkToFile</span><span class="Other">,</span> <span class="Identifier">pcLinkToDir</span><span class="Other">}</span><span class="Other">,</span> <span class="Identifier">kind</span><span class="Other">)</span></pre>
 
 </dd>
 <dt id="walkGlob"><a name="walkGlob.i,,string,FilterDescend,FilterYield"></a><pre><span class="Keyword">iterator</span> <span class="Identifier">walkGlob</span><span class="Other">(</span><span class="Identifier">pattern</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Operator">|</span> <span class="Identifier">Glob</span><span class="Other">;</span> <span class="Identifier">root</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span> <span class="Identifier">options</span> <span class="Other">=</span> <span class="Identifier">defaultGlobOptions</span><span class="Other">;</span>
                  <span class="Identifier">filterDescend</span><span class="Other">:</span> <span class="Identifier">FilterDescend</span> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">;</span> <span class="Identifier">filterYield</span><span class="Other">:</span> <span class="Identifier">FilterYield</span> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
 <dd>
-<p>Iterates over all the paths within the scope of the given glob <tt class="docutils literal"><span class="pre">pattern</span></tt>, yielding all those that match. <tt class="docutils literal"><span class="pre">root</span></tt> defaults to the current working directory (by using <tt class="docutils literal"><span class="pre">os.getCurrentDir</span></tt>).</p>
+<p>Iterates over all the paths within the scope of the given glob <tt class="docutils literal"><span class="pre">pattern</span></tt>, yielding all those that match. <tt class="docutils literal"><span class="pre">root</span></tt> defaults to the current working directory (by using <a class="reference external" href="https://nim-lang.org/docs/os.html#getCurrentDir,">os.getCurrentDir</a>).</p>
 <p>See <a class="reference external" href="#GlobOption">GlobOption</a> for the flags available to alter iteration behavior and output.</p>
 
 <strong class="examples_text">Examples:</strong>
@@ -1572,7 +1577,7 @@ Equivalent to <a class="reference external" href="#walkGlob.i,,string,FilterDesc
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small>Made with Nim. Generated: 2018-07-16 23:06:12 UTC</small>
+        <small>Made with Nim. Generated: 2018-07-20 04:05:37 UTC</small>
       </div>
     </div>
   </div>
