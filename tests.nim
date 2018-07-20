@@ -9,10 +9,10 @@ import unittest
 import src/glob
 
 template isEquiv (pattern, expected: string; forDos = false): bool =
-  globToRegexString(pattern, forDos) == expected
+  globToRegexString(pattern, forDos, forDos) == expected
 
 template isMatchTest (pattern, input: string; forDos = false): bool =
-  matches(input, pattern, forDos)
+  matches(input, pattern, forDos, forDos)
 
 proc touchFile (path: string) =
   let (head, _) = path.splitPath
@@ -50,7 +50,7 @@ suite "procs accept both string & glob":
   test "matches":
     check "src/dir/foo.nim".matches("src/**/*.nim", false)
     check "src/dir/foo.nim".matches(glob("src/**/*.nim", false))
-    check "SRC/FOO.NIM".matches("src/*.nim", ignoreCase = true)
+    check "SRC/FOO.NIM".matches("src/*.nim", isDos = false, ignoreCase = true)
 
   test "walkGlob, walkGlobKinds":
     let cleanup = createStructure("temp", @[
@@ -369,7 +369,7 @@ suite "pattern walking / listing":
 suite "utility procs":
   test "glob":
     let patternString = "src/**/*.nim"
-    let g = glob("src/**/*.nim", false)
+    let g = glob("src/**/*.nim", false, false)
     check g.pattern == patternString
     check g.base == "src"
     check g.magic == "**/*.nim"
@@ -379,7 +379,7 @@ suite "utility procs":
 
     test "absolute paths (unix)":
       let patternString = "/home/cc/dev/nim/**/*.nim"
-      let g = glob(patternString, false)
+      let g = glob(patternString, false, false)
       check g.pattern == patternString
       check g.base == "/home/cc/dev/nim"
       check g.magic == "**/*.nim"
@@ -387,11 +387,11 @@ suite "utility procs":
 
     test "absolute paths (windows)":
       let patternString = "C:/Users/cc/dev/nim/**/*.nim"
-      let g = glob(patternString, true)
+      let g = glob(patternString, true, true)
       check g.pattern == patternString
       check g.base == "C:/Users/cc/dev/nim"
       check g.magic == "**/*.nim"
-      check g.regexStr == r"^C:\\Users\\cc\\dev\\nim\\(?:[^\\]*(?:\\|$))*[^\\]*\.nim$"
+      check g.regexStr == r"^(?i)C:\\Users\\cc\\dev\\nim\\(?:[^\\]*(?:\\|$))*[^\\]*\.nim$"
 
   test "hasMagic":
     check "".hasMagic.not
