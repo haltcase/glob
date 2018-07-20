@@ -50,6 +50,7 @@ suite "procs accept both string & glob":
   test "matches":
     check "src/dir/foo.nim".matches("src/**/*.nim", false)
     check "src/dir/foo.nim".matches(glob("src/**/*.nim", false))
+    check "SRC/FOO.NIM".matches("src/*.nim", ignoreCase = true)
 
   test "walkGlob, walkGlobKinds":
     let cleanup = createStructure("temp", @[
@@ -332,6 +333,15 @@ suite "pattern walking / listing":
         "temp" / "deep" / "dir",
         "temp" / "deep" / "dir" / "file.nim",
         "temp" / "not_as",
+        "temp" / "not_as" / "deep.jpg",
+        "temp" / "not_as" / "deep.nim",
+        "temp" / "shallow.nim"
+      ])
+
+    test "`IgnoreCase` enables case insensitive matching":
+      let o = defaultGlobOptions + {IgnoreCase}
+      check seqsEqual(toSeq(walkGlob("TEMP/**", options = o)), @[
+        "temp" / "deep" / "dir" / "file.nim",
         "temp" / "not_as" / "deep.jpg",
         "temp" / "not_as" / "deep.nim",
         "temp" / "shallow.nim"

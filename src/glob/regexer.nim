@@ -43,7 +43,11 @@ template fail (message, pattern: string, index: int) =
   let errLines = 2.spaces & pattern & "\p" & (2 + index).spaces & "^" & "\p\p"
   raise newException(GlobSyntaxError, message & "\p\p" & errLines)
 
-proc globToRegexString* (pattern: string, isDos = isDosDefault): string =
+proc globToRegexString* (
+  pattern: string,
+  isDos = isDosDefault,
+  ignoreCase = isDosDefault
+): string =
   ## Parses the given ``pattern`` glob string and returns a regex string.
   ## Syntactic errors will cause a ``GlobSyntaxError`` to be raised.
   var
@@ -66,6 +70,8 @@ proc globToRegexString* (pattern: string, isDos = isDosDefault): string =
 
   template isNext (cmp: char): bool =
     peek(i + 1) == cmp
+
+  if ignoreCase: add "(?i)"
 
   while i < pattern.len - 1:
     inc i
