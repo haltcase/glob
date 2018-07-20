@@ -265,10 +265,48 @@ func maybeJoin (p1, p2: string): string =
   elif p2.isAbsolute: p2
   else: p1 / p2
 
-func expandGlob (pattern: string): string =
-  if pattern.hasMagic: pattern
-  elif pattern.existsDir: pattern & "/**"
-  else: pattern
+func makeCaseInsensitive (pattern: string): string =
+  result = ""
+  for c in pattern:
+    if c in Letters:
+      result.add '['
+      result.add c.toLowerAscii
+      result.add c.toUpperAscii
+      result.add ']'
+    else:
+      result.add c
+
+# helper to find file system items case insensitively
+# on case insensitive systems this is equivalent an existence check
+iterator initStack (
+  pattern: string,
+  kinds = {pcFile, pcLinkToFile, pcDir, pcLinkToDir},
+  ignoreCase = false
+): tuple[kind: PathComponent, path: string] =
+  template push (path: string) =
+    var kind: PathComponent
+    if path.pathType(kind) and kind in kinds: yield (kind, path)
+
+  when FileSystemCaseSensitive:
+    if ignoreCase:
+      for path in walkPattern(pattern.makeCaseInsensitive):
+        push path
+    else:
+      push pattern
+  else:
+    push pattern
+
+func expandGlob (pattern: string, ignoreCase: bool): string =
+  if pattern.hasMagic: return pattern
+
+  for _, path in initStack(pattern, {pcDir, pcLinkToDir}, ignoreCase):
+    # we can't easily check a file's existence case insensitively on case
+    # sensitive systems, so (when necessary) walk over a case insensitive
+    # version of this pattern until we find a matching directory and
+    # break/return immediately when we've found one
+    return path & "/**"
+
+  return pattern
 
 func globToRegex* (pattern: string, isDos = isDosDefault, ignoreCase = isDosDefault): Regex =
   ## Converts a string glob pattern to a regex pattern.
@@ -334,37 +372,6 @@ func matches* (input, pattern: string; isDos = isDosDefault, ignoreCase = isDosD
 
   input.contains(globToRegex(pattern, isDos, ignoreCase))
 
-func makeCaseInsensitive (pattern: string): string =
-  result = ""
-  for c in pattern:
-    if c in Letters:
-      result.add '['
-      result.add c.toLowerAscii
-      result.add c.toUpperAscii
-      result.add ']'
-    else:
-      result.add c
-
-# helper to find file system items case insensitively
-# on case insensitive systems this is equivalent an existence check
-iterator initStack (
-  pattern: string,
-  kinds = {pcFile, pcLinkToFile, pcDir, pcLinkToDir},
-  ignoreCase = false
-): tuple[kind: PathComponent, path: string] =
-  template push (path: string) =
-    var kind: PathComponent
-    if path.pathType(kind) and kind in kinds: yield (kind, path)
-
-  when FileSystemCaseSensitive:
-    if ignoreCase:
-      for path in walkPattern(pattern.makeCaseInsensitive):
-        push path
-    else:
-      push pattern
-  else:
-    push pattern
-
 iterator walkGlobKinds* (
   pattern: string | Glob,
   root = "",
@@ -417,7 +424,7 @@ iterator walkGlobKinds* (
   var dir: string
   when pattern is Glob:
     dir = maybeJoin(internalRoot, pattern.base)
-    matchPattern = pattern.magic.expandGlob
+    matchPattern = pattern.magic.expandGlob(IgnoreCase in options)
   else:
     let stems = splitPattern(matchPattern)
     dir = maybeJoin(internalRoot, stems.base)
