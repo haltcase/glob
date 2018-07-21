@@ -279,7 +279,7 @@ func makeCaseInsensitive (pattern: string): string =
 # helper to find file system items case insensitively
 # on case insensitive systems this is equivalent an existence check
 iterator initStack (
-  pattern: string,
+  path: string,
   kinds = {pcFile, pcLinkToFile, pcDir, pcLinkToDir},
   ignoreCase = false
 ): GlobEntry =
@@ -287,14 +287,16 @@ iterator initStack (
     var kind: PathComponent
     if path.pathType(kind) and kind in kinds: yield (path, kind)
 
-  when FileSystemCaseSensitive:
-    if ignoreCase:
-      for path in walkPattern(pattern.makeCaseInsensitive):
-        push path
-    else:
-      push pattern
-  else:
-    push pattern
+  let normalized =
+    when FileSystemCaseSensitive:
+      if ignoreCase: path.makeCaseInsensitive
+      else: path
+    else: path
+
+  # using `walkPattern` even on case sensitive systems (where it can only match
+  # one item anyway) gets us a path that matches the casing of the actual filesystem
+  for realPath in walkPattern(normalized):
+    push realPath
 
 func expandGlob (pattern: string, ignoreCase: bool): string =
   if pattern.hasMagic: return pattern
