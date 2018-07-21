@@ -139,7 +139,7 @@ will potentially be added in the future, for example:
 
 ]##
 
-import future
+import sugar
 import os
 import strutils
 from sequtils import toSeq
