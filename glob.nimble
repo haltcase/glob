@@ -1,4 +1,4 @@
-version       = "0.8.0"
+version       = "0.8.1"
 author        = "Bo Lingen"
 description   = "Pure library for matching file paths against Unix style glob patterns."
 license       = "MIT"

@@ -1,3 +1,13 @@
+<a name="v0.8.1"></a>
+### [`v0.8.1`](https://github.com/citycide/glob/compare/v0.8.0...v0.8.1) (2018-07-21)
+
+
+###### BUG FIXES
+
+* change `expandGlob` back to `proc` ([`98a5c79`](https://github.com/citycide/glob/commit/98a5c791ed1b024473c345b52b7e7810b8013017)), closes [#21](https://github.com/citycide/glob/issues/21)
+
+---
+
 <a name="v0.8.0"></a>
 ### [`v0.8.0`](https://github.com/citycide/glob/compare/v0.7.0...v0.8.0) (2018-07-21)
 
