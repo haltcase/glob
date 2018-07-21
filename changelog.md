@@ -1,3 +1,33 @@
+<a name="v0.8.0"></a>
+### [`v0.8.0`](https://github.com/citycide/glob/compare/v0.7.0...v0.8.0) (2018-07-21)
+
+
+###### BREAKING CHANGES
+
+* `listGlob` has been removed to encourage the use of iterators. `sequtils.toSeq`
+from Nim's stdlib can be used to convert the iterators to seqs
+* The walk iterators now take an options set rather than multiple boolean parameters
+* `GlobResult` has been renamed `GlobEntry`
+
+###### FEATURES
+
+* support case insensitive matching ([`fe17bdd`](https://github.com/citycide/glob/commit/fe17bddcd45f86771ba248a6756143dcd7a5a82d))
+* **windows:** match casing of expanded directories to filesystem ([`76e1582`](https://github.com/citycide/glob/commit/76e1582f4f1e36109147aa8882ccc97034f71e6e))
+* rename `GlobResult` to `GlobEntry` ([`34fa6f3`](https://github.com/citycide/glob/commit/34fa6f338ae1d41f55aa8a358bb4055cbbdcddd8))
+* forward `os.PathComponent` for ease of use ([`de74aff`](https://github.com/citycide/glob/commit/de74affcda0fcebc81da9db80363dacd2005477b))
+
+###### BUG FIXES
+
+* **walk:** expand magic if given a glob ([`8ef605b`](https://github.com/citycide/glob/commit/8ef605b0adac77440e3d8653e0543b489a9bfd00))
+* handle empty base paths when joining ([`0cdb00f`](https://github.com/citycide/glob/commit/0cdb00f268fc45df4c9ba73269a5cf54f4a250ee))
+* don't recurse into hidden directories when `includeHidden == false` (#14) ([`b6de2fd`](https://github.com/citycide/glob/commit/b6de2fd1a9eff022bc0006e565840f431cb99015))
+
+###### PERFORMANCE
+
+* **walk:** move some processing inside proceed check ([`cfabbea`](https://github.com/citycide/glob/commit/cfabbeaa9496d8e9a96f143f052377ea293f982a))
+
+---
+
 <a name="v0.7.0"></a>
 ### [`v0.7.0`](https://github.com/citycide/glob/compare/v0.6.0...v0.7.0) (2018-07-04)
 
