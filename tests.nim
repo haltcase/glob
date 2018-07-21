@@ -3,6 +3,7 @@ import ospaths
 from os import createDir, removeDir, getCurrentDir
 from algorithm import sortedByIt
 from sequtils import toSeq
+from strutils import split
 
 import unittest
 
@@ -13,6 +14,9 @@ template isEquiv (pattern, expected: string; forDos = false): bool =
 
 template isMatchTest (pattern, input: string; forDos = false): bool =
   matches(input, pattern, forDos, forDos)
+
+template p (path: string): string =
+  joinPath(path.split('/'))
 
 proc touchFile (path: string) =
   let (head, _) = path.splitPath
@@ -54,17 +58,17 @@ suite "procs accept both string & glob":
 
   test "walkGlob, walkGlobKinds":
     let cleanup = createStructure("temp", @[
-      "deep" / "dir" / "file.nim",
-      "not_as" / "deep.jpg",
-      "not_as" / "deep.nim",
-      "shallow.nim"
+      p"deep/dir/file.nim",
+      p"not_as/deep.jpg",
+      p"not_as/deep.nim",
+      p"shallow.nim"
     ])
 
     const expected = @[
-      "temp" / "deep" / "dir" / "file.nim",
-      "temp" / "not_as" / "deep.jpg",
-      "temp" / "not_as" / "deep.nim",
-      "temp" / "shallow.nim"
+      p"temp/deep/dir/file.nim",
+      p"temp/not_as/deep.jpg",
+      p"temp/not_as/deep.nim",
+      p"temp/shallow.nim"
     ]
 
     check seqsEqual(toSeq(walkGlob("temp/**/*.{jpg,nim}")), expected)
@@ -295,64 +299,64 @@ suite "regex matching":
 suite "pattern walking / listing":
   test "yields expected files":
     let cleanup = createStructure("temp", @[
-      "deep" / "dir" / "file.nim",
-      "not_as" / "deep.jpg",
-      "not_as" / "deep.nim",
-      "shallow.nim"
+      p"deep/dir/file.nim",
+      p"not_as/deep.jpg",
+      p"not_as/deep.nim",
+      p"shallow.nim"
     ])
 
     test "basic":
       check seqsEqual(toSeq(walkGlob("temp")), @[
-        "temp" / "deep" / "dir" / "file.nim",
-        "temp" / "not_as" / "deep.jpg",
-        "temp" / "not_as" / "deep.nim",
-        "temp" / "shallow.nim"
+        p"temp/deep/dir/file.nim",
+        p"temp/not_as/deep.jpg",
+        p"temp/not_as/deep.nim",
+        p"temp/shallow.nim"
       ])
 
       check seqsEqual(toSeq(walkGlob("temp/**/*.{nim,jpg}")), @[
-        "temp" / "deep" / "dir" / "file.nim",
-        "temp" / "not_as" / "deep.jpg",
-        "temp" / "not_as" / "deep.nim",
-        "temp" / "shallow.nim"
+        p"temp/deep/dir/file.nim",
+        p"temp/not_as/deep.jpg",
+        p"temp/not_as/deep.nim",
+        p"temp/shallow.nim"
       ])
 
       check seqsEqual(toSeq(walkGlob("temp/*.nim")), @[
-        "temp" / "shallow.nim"
+        p"temp/shallow.nim"
       ])
 
       check seqsEqual(toSeq(walkGlob("temp/**/*.nim")), @[
-        "temp" / "deep" / "dir" / "file.nim",
-        "temp" / "not_as" / "deep.nim",
-        "temp" / "shallow.nim"
+        p"temp/deep/dir/file.nim",
+        p"temp/not_as/deep.nim",
+        p"temp/shallow.nim"
       ])
 
     test "`Directories` includes matching directories in the results":
       let options = defaultGlobOptions + {Directories}
       check seqsEqual(toSeq(walkGlob("temp/**", options = options)), @[
-        "temp" / "deep",
-        "temp" / "deep" / "dir",
-        "temp" / "deep" / "dir" / "file.nim",
-        "temp" / "not_as",
-        "temp" / "not_as" / "deep.jpg",
-        "temp" / "not_as" / "deep.nim",
-        "temp" / "shallow.nim"
+        p"temp/deep",
+        p"temp/deep/dir",
+        p"temp/deep/dir/file.nim",
+        p"temp/not_as",
+        p"temp/not_as/deep.jpg",
+        p"temp/not_as/deep.nim",
+        p"temp/shallow.nim"
       ])
 
     test "`IgnoreCase` enables case insensitive matching":
       let o = defaultGlobOptions + {IgnoreCase}
       check seqsEqual(toSeq(walkGlob("TEMP/**", options = o)), @[
-        "temp" / "deep" / "dir" / "file.nim",
-        "temp" / "not_as" / "deep.jpg",
-        "temp" / "not_as" / "deep.nim",
-        "temp" / "shallow.nim"
+        p"temp/deep/dir/file.nim",
+        p"temp/not_as/deep.jpg",
+        p"temp/not_as/deep.nim",
+        p"temp/shallow.nim"
       ])
 
     test "`NoExpandDirs` disables the default directory expansion behavior":
       check seqsEqual(toSeq(walkGlob("temp")), @[
-        "temp" / "deep" / "dir" / "file.nim",
-        "temp" / "not_as" / "deep.jpg",
-        "temp" / "not_as" / "deep.nim",
-        "temp" / "shallow.nim"
+        p"temp/deep/dir/file.nim",
+        p"temp/not_as/deep.jpg",
+        p"temp/not_as/deep.nim",
+        p"temp/shallow.nim"
       ])
 
       let options = defaultGlobOptions + {NoExpandDirs}
@@ -361,7 +365,7 @@ suite "pattern walking / listing":
     test "`Absolute` makes returned paths absolute":
       let options = defaultGlobOptions + {Absolute}
       check seqsEqual(toSeq(walkGlob("temp/*.nim", options = options)), @[
-        getCurrentDir() / "temp" / "shallow.nim"
+        getCurrentDir() / p"temp/shallow.nim"
       ])
 
     cleanup()
