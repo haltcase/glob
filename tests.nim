@@ -1,4 +1,4 @@
-import future
+import sugar
 import ospaths
 from os import createDir, removeDir, getCurrentDir
 from algorithm import sortedByIt
