@@ -265,7 +265,7 @@ func maybeJoin (p1, p2: string): string =
   elif p2.isAbsolute: p2
   else: p1 / p2
 
-func makeCaseInsensitive (pattern: string): string =
+func makeCaseInsensitive (pattern: string): string {.used.} =
   result = ""
   for c in pattern:
     if c in Letters:
