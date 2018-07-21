@@ -298,7 +298,7 @@ iterator initStack (
   for realPath in walkPattern(normalized):
     push realPath
 
-func expandGlob (pattern: string, ignoreCase: bool): string =
+proc expandGlob (pattern: string, ignoreCase: bool): string =
   if pattern.hasMagic: return pattern
 
   for path, _ in initStack(pattern, {pcDir, pcLinkToDir}, ignoreCase):
