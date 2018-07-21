@@ -5,7 +5,7 @@ license       = "MIT"
 srcDir        = "src"
 skipFiles     = @["tests.nim"]
 
-requires "nim >= 0.18.0"
+requires "nim >= 0.18.1"
 requires "regex >= 0.6.3"
 
 task test, "Run the test suite":
