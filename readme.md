@@ -28,9 +28,8 @@ assert "src/lib.rs".matches(pattern).not
 # directories are expanded by default
 # so `src` and `src/**` are equivalent
 for path in walkGlob("src"):
+  # every file in `src` or its subdirectories
   echo path
-
-let matches = listGlob("src")
 ```
 
 ## development
