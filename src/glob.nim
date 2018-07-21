@@ -423,16 +423,16 @@ iterator walkGlobKinds* (
       of pcLinkToFile:
         if FileLinks in options: push(path, kind, internalRoot)
 
-  var dir: string
-  when pattern is Glob:
-    dir = maybeJoin(internalRoot, pattern.base)
-    matchPattern = pattern.magic.expandGlob(IgnoreCase in options)
-  else:
-    let stems = splitPattern(matchPattern)
-    dir = maybeJoin(internalRoot, stems.base)
-    matchPattern = stems.magic
-
   if proceed:
+    var dir: string
+    when pattern is Glob:
+      dir = maybeJoin(internalRoot, pattern.base)
+      matchPattern = pattern.magic.expandGlob(IgnoreCase in options)
+    else:
+      let stems = splitPattern(matchPattern)
+      dir = maybeJoin(internalRoot, stems.base)
+      matchPattern = stems.magic
+
     let matcher = matchPattern.globToRegex(ignoreCase = IgnoreCase in options)
     let isRec = "**" in matchPattern
 
