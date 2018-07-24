@@ -246,12 +246,18 @@ func hasMagic* (str: string): bool =
 
   str.contains({'*', '?', '[', '{'}) or str.contains(re"[?!@+]\(")
 
+# use this in the future (when/if merged)
+# https://github.com/nim-lang/Nim/pull/8166
 func toRelative (path, dir: string): string =
-  if path.startsWith(dir):
+  let (innerPath, innerDir) =
+    when defined FileSystemCaseSensitive: (path, dir)
+    else: (path.toLowerAscii, dir.toLowerAscii)
+
+  if innerPath.startsWith(innerDir):
     let start = dir.len + dir.endsWith(DirSep).not.int
-    path[start..<path.len]
+    return path[start..<path.len]
   else:
-    path
+    return path
 
 proc pathType (path: string, kind: var PathComponent): bool =
   try:
