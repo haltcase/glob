@@ -228,8 +228,8 @@ when defined Nimdoc:
     ##    const optsNoFiles = defaultGlobOptions - {Files}
     ##    const optsHiddenNoLinks = defaultGlobOptions + {Hidden} - {FileLinks, DirLinks}
     ##
-    ## On Windows systems, this also includes ``GlobOption.IgnoreCase``.
-elif defined windows:
+    ## On case-insensitive filesystems (like Windows), this also includes ``GlobOption.IgnoreCase``.
+elif FileSystemCaseSensitive:
   const defaultGlobOptions* = {Files, FileLinks, DirLinks, IgnoreCase}
 else:
   const defaultGlobOptions* = {Files, FileLinks, DirLinks}
