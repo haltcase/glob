@@ -313,6 +313,21 @@ suite "pattern walking / listing":
         p"temp/shallow.nim"
       ])
 
+      test "leading magic":
+        let clean = createStructure("temp_leading_magic", @[
+          p"foo/a.txt",
+          p"bar/a.txt",
+          p"baz/a.txt"
+        ])
+
+        check seqsEqual(toSeq(walkGlob("*/a.txt", "temp_leading_magic")), @[
+          p"foo/a.txt",
+          p"bar/a.txt",
+          p"baz/a.txt"
+        ])
+
+        clean()
+
       check seqsEqual(toSeq(walkGlob("temp/**/*.{nim,jpg}")), @[
         p"temp/deep/dir/file.nim",
         p"temp/not_as/deep.jpg",
