@@ -380,6 +380,23 @@ func matches* (input, pattern: string; isDos = isDosDefault, ignoreCase = isDosD
 
   input.contains(globToRegex(pattern, isDos, ignoreCase))
 
+func toOutputPath (
+  path, root, internalRoot: string;
+  pattern: string | Glob,
+  options: GlobOptions
+): string =
+  if Absolute in options or internalRoot == "":
+    return maybeJoin(internalRoot, path)
+
+  if root != "":
+    return path.toRelative(internalRoot)
+
+  let patternStr = when pattern is Glob: pattern.pattern else: pattern
+  if patternStr.isAbsolute:
+    return maybeJoin(internalRoot, path)
+
+  return path.toRelative(internalRoot)
+
 iterator walkGlobKinds* (
   pattern: string | Glob,
   root = "",
@@ -406,10 +423,7 @@ iterator walkGlobKinds* (
   template push (path: string, kind: PathComponent, dir = "") =
     if filterYield.isNil or filterYield(path, kind):
       yield (
-        unixToNativePath(
-          if Absolute in options or dir == "": maybeJoin(dir, path)
-          else: path.toRelative(dir)
-        ),
+        path.toOutputPath(root, dir, pattern, options).unixToNativePath,
         kind
       )
 
@@ -449,12 +463,10 @@ iterator walkGlobKinds* (
       for kind, path in walkDir(subdir):
         if Hidden notin options and path.isHidden: continue
 
-        let
-          rel = path.toRelative(dir)
-          isMatch = matcher in rel
-          resultPath = unixToNativePath(
-            if Absolute in options: path else: path.toRelative(internalRoot)
-          )
+        let resultPath = unixToNativePath(
+          path.toOutputPath(root, internalRoot, pattern, options)
+        )
+        let isMatch = matcher in path.toRelative(dir)
 
         case kind
         of pcLinkToDir:
