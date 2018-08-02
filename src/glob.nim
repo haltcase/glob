@@ -380,6 +380,23 @@ func matches* (input, pattern: string; isDos = isDosDefault, ignoreCase = isDosD
 
   input.contains(globToRegex(pattern, isDos, ignoreCase))
 
+proc shouldDescend (
+  subdir, resultPath, matchPattern: string;
+  isRec, ignoreCase: bool,
+  entry: GlobEntry,
+  filter: FilterDescend
+): bool =
+  if isRec or (not filter.isNil and filter(resultPath)):
+    return true
+
+  let tail = entry.path.toRelative(subdir)
+  let head = matchPattern.splitPath.head
+
+  if head == tail: return true
+
+  let subPattern = head.globToRegex(ignoreCase = ignoreCase)
+  if subPattern in tail: return true
+
 func toOutputPath (
   path, root, internalRoot: string;
   pattern: string | Glob,
@@ -455,8 +472,8 @@ iterator walkGlobKinds* (
 
     let matcher = matchPattern.globToRegex(ignoreCase = IgnoreCase in options)
     let isRec = "**" in matchPattern
-
     var stack = toSeq(initStack(dir, {pcDir, pcLinkToDir}, IgnoreCase in options))
+
     var last = dir
     while stack.len > 0:
       let (subdir, _) = stack.pop
@@ -479,14 +496,23 @@ iterator walkGlobKinds* (
               continue
 
             last = subdir
-
-            if isRec and (filterDescend.isNil or filterDescend(resultPath)):
+            if shouldDescend(
+              subdir, resultPath, matchPattern,
+              isRec, IgnoreCase in options,
+              (path, kind),
+              filterDescend
+            ):
               stack.add((path, kind))
         of pcDir:
           if Directories in options and isMatch:
             push(resultPath, kind)
 
-          if isRec and (filterDescend.isNil or filterDescend(resultPath)):
+          if shouldDescend(
+            subdir, resultPath, matchPattern,
+            isRec, IgnoreCase in options,
+            (path, kind),
+            filterDescend
+          ):
             stack.add((path, kind))
         of pcLinkToFile:
           if FileLinks in options and isMatch:
