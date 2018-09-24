@@ -142,7 +142,7 @@ will potentially be added in the future, for example:
 when (NimMajor, NimMinor, NimPatch) >= (0, 18, 1):
   from sugar import `=>`, `->`
 else:
-  import future
+  from future import `=>`, `->`
 import os
 import strutils
 from sequtils import toSeq

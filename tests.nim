@@ -1,7 +1,7 @@
 when (NimMajor, NimMinor, NimPatch) >= (0, 18, 1):
   from sugar import `=>`, `->`
 else:
-  import future
+  from future import `=>`, `->`
 import ospaths
 from os import createDir, removeDir, getCurrentDir
 from algorithm import sortedByIt
