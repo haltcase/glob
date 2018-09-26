@@ -316,21 +316,6 @@ suite "pattern walking / listing":
         p"temp/shallow.nim"
       ])
 
-      test "leading magic":
-        let clean = createStructure("temp_leading_magic", @[
-          p"foo/a.txt",
-          p"bar/a.txt",
-          p"baz/a.txt"
-        ])
-
-        check seqsEqual(toSeq(walkGlob("*/a.txt", "temp_leading_magic")), @[
-          p"foo/a.txt",
-          p"bar/a.txt",
-          p"baz/a.txt"
-        ])
-
-        clean()
-
       check seqsEqual(toSeq(walkGlob("temp/**/*.{nim,jpg}")), @[
         p"temp/deep/dir/file.nim",
         p"temp/not_as/deep.jpg",
@@ -347,6 +332,36 @@ suite "pattern walking / listing":
         p"temp/not_as/deep.nim",
         p"temp/shallow.nim"
       ])
+
+    test "leading magic":
+      let cleanLeadingMagic = createStructure("temp_leading_magic", @[
+        p"lol/inner/z1.txt",
+        p"lol/inner/two/z1.txt",
+        p"lol/inner/three/four/z1.txt",
+        p"foo/a.txt",
+        p"bar/a.txt",
+        p"baz/a.txt"
+      ])
+
+      check seqsEqual(toSeq(walkGlob("*/a.txt", "temp_leading_magic")), @[
+        p"foo/a.txt",
+        p"bar/a.txt",
+        p"baz/a.txt"
+      ])
+
+      check seqsEqual(toSeq(walkGlob("???/*/z1.txt", "temp_leading_magic")), @[
+        p"lol/inner/z1.txt"
+      ])
+
+      check seqsEqual(toSeq(walkGlob("*/?????/*/z1.txt", "temp_leading_magic")), @[
+        p"lol/inner/two/z1.txt"
+      ])
+
+      check seqsEqual(toSeq(walkGlob("*/*/?????/*/z1.txt", "temp_leading_magic")), @[
+        p"lol/inner/three/four/z1.txt"
+      ])
+
+      cleanLeadingMagic()
 
     test "`Directories` includes matching directories in the results":
       let options = defaultGlobOptions + {Directories}

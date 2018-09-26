@@ -256,7 +256,9 @@ func toRelative (path, dir: string): string =
     when defined FileSystemCaseSensitive: (path, dir)
     else: (path.toLowerAscii, dir.toLowerAscii)
 
-  if innerPath.startsWith(innerDir):
+  if innerPath == innerDir:
+    return "."
+  elif innerPath.startsWith(innerDir):
     let start = dir.len + dir.endsWith(DirSep).not.int
     return path[start..<path.len]
   else:
@@ -270,9 +272,11 @@ proc pathType (path: string, kind: var PathComponent): bool =
     discard
 
 func maybeJoin (p1, p2: string): string =
-  if p2 == "": p1
-  elif p2.isAbsolute: p2
-  else: p1 / p2
+  unixToNativePath(
+    if p2 == "": p1
+    elif p2.isAbsolute: p2
+    else: p1 / p2
+  )
 
 func makeCaseInsensitive (pattern: string): string {.used.} =
   result = ""
@@ -286,7 +290,7 @@ func makeCaseInsensitive (pattern: string): string {.used.} =
       result.add c
 
 # helper to find file system items case insensitively
-# on case insensitive systems this is equivalent an existence check
+# on case insensitive systems this is equivalent to an existence check
 iterator initStack (
   path: string,
   kinds = {pcFile, pcLinkToFile, pcDir, pcLinkToDir},
@@ -302,10 +306,10 @@ iterator initStack (
       else: path
     else: path
 
-  # using `walkPattern` even on case sensitive systems (where it can only match
+  # using `walkPattern` even on case insensitive systems (where it can only match
   # one item anyway) gets us a path that matches the casing of the actual filesystem
   for realPath in walkPattern(normalized):
-    push realPath
+    push realPath.unixToNativePath
 
 proc expandGlob (pattern: string, ignoreCase: bool): string =
   if pattern.hasMagic: return pattern
@@ -386,6 +390,7 @@ func matches* (input, pattern: string; isDos = isDosDefault, ignoreCase = isDosD
 proc shouldDescend (
   subdir, resultPath, matchPattern: string;
   isRec, ignoreCase: bool,
+  depth: int,
   entry: GlobEntry,
   filter: FilterDescend
 ): bool =
@@ -393,8 +398,10 @@ proc shouldDescend (
     return true
 
   let tail = entry.path.toRelative(subdir)
-  let head = matchPattern.splitPath.head
+  let patternComponents = matchPattern.split('/', depth + 1)
+  if depth > patternComponents.len - 1: return false
 
+  let head = patternComponents[depth]
   if head == tail: return true
 
   let subPattern = head.globToRegex(ignoreCase = ignoreCase)
@@ -416,6 +423,11 @@ func toOutputPath (
     return maybeJoin(internalRoot, path)
 
   return path.toRelative(internalRoot)
+
+func getPathDepth (parent, child: string): int =
+  var rel = child.toRelative(parent)
+  if rel != ".": rel &= DirSep
+  result = rel.count(DirSep)
 
 iterator walkGlobKinds* (
   pattern: string | Glob,
@@ -475,11 +487,13 @@ iterator walkGlobKinds* (
 
     let matcher = matchPattern.globToRegex(ignoreCase = IgnoreCase in options)
     let isRec = "**" in matchPattern
-    var stack = toSeq(initStack(dir, {pcDir, pcLinkToDir}, IgnoreCase in options))
 
+    var stack = toSeq(initStack(dir, {pcDir, pcLinkToDir}, IgnoreCase in options))
     var last = dir
     while stack.len > 0:
       let (subdir, _) = stack.pop
+      let depth = getPathDepth(internalRoot, subdir)
+
       for kind, path in walkDir(subdir):
         if Hidden notin options and path.isHidden: continue
 
@@ -502,6 +516,7 @@ iterator walkGlobKinds* (
             if shouldDescend(
               subdir, resultPath, matchPattern,
               isRec, IgnoreCase in options,
+              depth,
               (path, kind),
               filterDescend
             ):
@@ -513,6 +528,7 @@ iterator walkGlobKinds* (
           if shouldDescend(
             subdir, resultPath, matchPattern,
             isRec, IgnoreCase in options,
+            depth,
             (path, kind),
             filterDescend
           ):
