@@ -6,7 +6,19 @@ _glob_ is a cross-platform, pure Nim implementation of [globs][wiki] that suppor
 creating patterns, testing file paths, and walking through directories to find
 matching files or directories.
 
+If you're unfamiliar with globs, they essentially let you use a simple language
+to describe what filenames you're looking for with wildcards, placeholders, and
+other pretty intuitive features.
+
 You can find the full [documentation here](https://citycide.github.io/glob).
+
+## features
+
+* full glob support across platforms
+* all glob syntax: `*` and `?` wildcards plus ranges, groups, & pattern matching
+* efficient file system walking without unnecessary traversals
+* configurable iteration behavior with sane defaults
+* user defined filters for matching and directory traversal
 
 ## installation & usage
 
@@ -28,14 +40,18 @@ assert "src/lib.rs".matches(pattern).not
 # directories are expanded by default
 # so `src` and `src/**` are equivalent
 for path in walkGlob("src"):
-  # every file in `src` or its subdirectories
+  # every file in `src` or its subdirectories, lazily
   echo path
+
+# need the list now (eagerly)?
+from sequtils import toSeq
+echo toSeq(walkGlob("src/*.nim"))
 ```
 
 ## development
 
-To build `glob` from source you'll need to have [Nim][nim] installed,
-and should also have [Nimble][nimble], Nim's package manager.
+To build `glob` from source you'll need to install [Nim][nim] and its package
+manager [Nimble][nimble].
 
 1. Clone the repo: `git clone https://github.com/citycide/glob.git`
 2. Move into the newly cloned directory: `cd glob`
