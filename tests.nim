@@ -2,8 +2,8 @@ when (NimMajor, NimMinor, NimPatch) >= (0, 18, 1):
   from sugar import `=>`, `->`
 else:
   from future import `=>`, `->`
-import ospaths
-from os import createDir, removeDir, getCurrentDir
+
+import os
 from algorithm import sortedByIt
 from sequtils import toSeq
 from strutils import split
@@ -383,6 +383,22 @@ suite "pattern walking / listing":
         p"temp/not_as/deep.nim",
         p"temp/shallow.nim"
       ])
+
+      when FileSystemCaseSensitive:
+        test "`IgnoreCase` works correctly on the glob base":
+          let cleanCaseBase = createStructure("temp_case_base", @[
+            p"tmp/d03/a1/z1.txt",
+            p"tmp/d03/A1/Z2.txt",
+            p"tmp/d03/A1/z2.txt"
+          ])
+
+          check seqsEqual(toSeq(walkGlob("tmp/d03/A1/z*.txt", "temp_case_base", options = o)), @[
+            p"tmp/d03/a1/z1.txt",
+            p"tmp/d03/A1/Z2.txt",
+            p"tmp/d03/A1/z2.txt"
+          ])
+
+          cleanCaseBase()
 
     test "`NoExpandDirs` disables the default directory expansion behavior":
       check seqsEqual(toSeq(walkGlob("temp")), @[
