@@ -272,6 +272,19 @@ proc pathType (path: string, kind: var PathComponent): bool =
   except:
     discard
 
+# we need this wrapper because `isHidden` is currently broken
+# on non-Windows systems and doesn't work for directories:
+#   https://github.com/nim-lang/Nim/issues/8225
+# we can remove this wrapper once the following PR is merged:
+#   https://github.com/nim-lang/Nim/pull/8315
+proc isHiddenEntry (path: string): bool =
+  when defined windows:
+    result = path.isHidden
+  else:
+    # https://github.com/nim-lang/Nim/blob/2b5e80c81f4135ea8daef5a503f368bff2639549/lib/pure/os.nim#L1713-L1714
+    let fileName = extractFilename(path)
+    result = len(fileName) >= 2 and fileName[0] == '.' and fileName != ".."
+
 func maybeJoin (p1, p2: string): string =
   unixToNativePath(
     if p2 == "": p1
@@ -471,7 +484,7 @@ iterator walkGlobKinds* (
       maybeJoin(internalRoot, matchPattern),
       ignoreCase = IgnoreCase in options
     ):
-      if Hidden notin options and path.isHidden: continue
+      if Hidden notin options and path.isHiddenEntry: continue
 
       case kind
       of pcDir, pcLinkToDir:
@@ -505,7 +518,7 @@ iterator walkGlobKinds* (
       let depth = getPathDepth(internalRoot, subdir)
 
       for kind, path in walkDir(subdir):
-        if Hidden notin options and path.isHidden: continue
+        if Hidden notin options and path.isHiddenEntry: continue
 
         let resultPath = unixToNativePath(
           path.toOutputPath(root, internalRoot, pattern, options)
