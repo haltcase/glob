@@ -291,6 +291,7 @@ func makeCaseInsensitive (pattern: string): string {.used.} =
 
 # helper to find file system items case insensitively
 # on case insensitive systems this is equivalent to an existence check
+# any resulting paths are guaranteed to be absolute
 iterator initStack (
   path: string,
   kinds = {pcFile, pcLinkToFile, pcDir, pcLinkToDir},
@@ -298,28 +299,30 @@ iterator initStack (
 ): GlobEntry =
   template push (path: string) =
     var kind: PathComponent
-    if path.pathType(kind) and kind in kinds: yield (path, kind)
+    if path.pathType(kind) and kind in kinds:
+      yield (path.expandFilename, kind)
 
   let normalized =
     when FileSystemCaseSensitive:
       if ignoreCase: path.makeCaseInsensitive
       else: path
-    else: path
+    else:
+      path
 
   # using `walkPattern` even on case insensitive systems (where it can only match
   # one item anyway) gets us a path that matches the casing of the actual filesystem
-  for realPath in walkPattern(normalized):
-    push realPath.unixToNativePath
+  for subPath in walkPattern(normalized):
+    push subPath
 
-proc expandGlob (pattern: string, ignoreCase: bool): string =
+proc expandGlob (pattern, root: string, ignoreCase: bool): string =
   if pattern.hasMagic: return pattern
 
-  for path, _ in initStack(pattern, {pcDir, pcLinkToDir}, ignoreCase):
+  for path, _ in initStack(maybeJoin(root, pattern), {pcDir, pcLinkToDir}, ignoreCase):
     # we can't easily check a file's existence case insensitively on case
     # sensitive systems, so (when necessary) walk over a case insensitive
     # version of this pattern until we find a matching directory and
     # break/return immediately when we've found one
-    return path & "/**"
+    return path.toRelative(root) & "/**"
 
   return pattern
 
@@ -448,7 +451,10 @@ iterator walkGlobKinds* (
     for path, kind in walkGlobKinds("src/**/*", options = options):
       doAssert kind notin {pcLinkToFile, pcLinkToDir}
 
-  let internalRoot = if root == "": getCurrentDir() else: root
+  let internalRoot =
+    if root == "": getCurrentDir()
+    elif root.isAbsolute: root
+    else: getCurrentDir() / root
   var matchPattern = when pattern is Glob: pattern.pattern else: pattern
   var proceed = matchPattern.hasMagic
 
@@ -460,7 +466,10 @@ iterator walkGlobKinds* (
       )
 
   if not proceed:
-    for path, kind in initStack(matchPattern, ignoreCase = IgnoreCase in options):
+    for path, kind in initStack(
+      maybeJoin(internalRoot, matchPattern),
+      ignoreCase = IgnoreCase in options
+    ):
       if Hidden notin options and path.isHidden: continue
 
       case kind
@@ -479,7 +488,7 @@ iterator walkGlobKinds* (
     var dir: string
     when pattern is Glob:
       dir = maybeJoin(internalRoot, pattern.base)
-      matchPattern = pattern.magic.expandGlob(IgnoreCase in options)
+      matchPattern = pattern.magic.expandGlob(dir, IgnoreCase in options)
     else:
       let stems = splitPattern(matchPattern)
       dir = maybeJoin(internalRoot, stems.base)
