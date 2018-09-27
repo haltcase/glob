@@ -143,8 +143,8 @@ when (NimMajor, NimMinor, NimPatch) >= (0, 18, 1):
   from sugar import `=>`, `->`
 else:
   from future import `=>`, `->`
-import os
-import strutils
+
+import os, strutils
 from sequtils import toSeq
 
 import regex
@@ -152,6 +152,7 @@ import regex
 import glob/regexer
 
 const
+  # used for determing path separators, not for filesystem case sensitivity
   isDosDefault = defined windows
 
 type
@@ -278,7 +279,7 @@ func maybeJoin (p1, p2: string): string =
     else: p1 / p2
   )
 
-func makeCaseInsensitive (pattern: string): string {.used.} =
+func makeCaseInsensitive (pattern: string): string =
   result = ""
   for c in pattern:
     if c in Letters:
@@ -380,8 +381,8 @@ func matches* (input: string, glob: Glob): bool =
   input.contains(glob.regex)
 
 func matches* (input, pattern: string; isDos = isDosDefault, ignoreCase = isDosDefault): bool =
-  ## Constructs a `Glob <#Glob>`_ object from the given ``pattern`` and returns ``true``
-  ## if ``input`` is a match. Shortcut for ``matches(input, glob(pattern, isDos, ignoreCase))``.
+  ## Check that ``input`` matches the given ``pattern`` and return ``true`` if it does.
+  ## Shortcut for ``matches(input, glob(pattern, isDos, ignoreCase))``.
   runnableExamples:
     when defined posix:
       doAssert "src/dir/foo.nim".matches("src/**/*.nim")
