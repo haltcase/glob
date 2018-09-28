@@ -6,7 +6,7 @@ srcDir        = "src"
 skipFiles     = @["tests.nim"]
 
 requires "nim >= 0.18.0"
-requires "regex >= 0.6.3"
+requires "regex >= 0.7.4"
 
 task test, "Run the test suite":
   exec "nimble c -y --hints:off --verbosity:0 -r tests.nim"
