@@ -458,12 +458,12 @@ iterator walkGlobKinds* (
   ## the ``kind`` of the item.
   runnableExamples:
     for path, kind in walkGlobKinds("src/*.nim"):
-      doAssert path is string and kind is PathComponent
+      doAssert(path is string and kind is PathComponent)
 
     ## include hidden items, exclude links
     const optsHiddenNoLinks = defaultGlobOptions + {Hidden} - {FileLinks, DirLinks}
-    for path, kind in walkGlobKinds("src/**/*", options = options):
-      doAssert kind notin {pcLinkToFile, pcLinkToDir}
+    for path, kind in walkGlobKinds("src/**/*", options = optsHiddenNoLinks):
+      doAssert(kind notin {pcLinkToFile, pcLinkToDir})
 
   let internalRoot =
     if root == "": getCurrentDir()
