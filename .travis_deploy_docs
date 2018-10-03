@@ -13,6 +13,9 @@ fi
 
 TARGET_BRANCH=gh-pages
 
+# build the documentation
+nimble docs
+
 # clone target branch into a temporary publish directory
 REPO_PATH=$PWD
 pushd $HOME
