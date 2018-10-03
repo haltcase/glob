@@ -4,5 +4,6 @@
 .vscode
 
 nimcache
+/docs
 /tests
 /tests.exe
