@@ -1,3 +1,35 @@
+<a name="v0.9.0"></a>
+### [`v0.9.0`](https://github.com/citycide/glob/compare/v0.8.1...v0.9.0) (2018-10-02)
+
+
+###### BREAKING CHANGES
+
+* **walk:** absolute patterns now result in absolute paths if no root is provided (even if
+`Absolute notin options`)
+
+###### FEATURES
+
+* **walk:** make `Absolute` option handling smarter (#27) ([`589671a`](https://github.com/citycide/glob/commit/589671a897c12398113605193130d1c60ffab282)), closes [#23](https://github.com/citycide/glob/issues/23)
+
+###### BUG FIXES
+
+* **walk:** ensure hidden directories are not entered on non-Windows systems ([`1ea34f9`](https://github.com/citycide/glob/commit/1ea34f92126eae586528c0552641b9b3bcb1c1b2))
+* **walk:** match filesystem casing for entries on macOS (#33) ([`d9d1175`](https://github.com/citycide/glob/commit/d9d1175ef04603d91f7d6bc615a3e799f2111932))
+* **compat:** support future module relocation in nim devel (#31) ([`ffd65d3`](https://github.com/citycide/glob/commit/ffd65d3b94109bddb8cb0df0af351aa4f2ef41a6))
+* **walk:** handle leading shallow magic correctly (#30) ([`1fa54df`](https://github.com/citycide/glob/commit/1fa54df5fa57e38adc43de2cb050c7748c305047)), closes [#29](https://github.com/citycide/glob/issues/29)
+* **walk:** handle leading magic correctly pt. 2 ([`633a87d`](https://github.com/citycide/glob/commit/633a87d18cab63cef8bee2b6674a2c6a768236ca)), closes [#29](https://github.com/citycide/glob/issues/29)
+* **windows:** improve case insensitive path handling ([`4a0d545`](https://github.com/citycide/glob/commit/4a0d545e682f3f7792159f31119c34bdf2aaf4e3))
+
+###### CONTRIBUTORS
+
+This release was made possible by:
+
+* [@skellock](https://github.com/skellock)
+
+Thanks!
+
+---
+
 <a name="v0.8.1"></a>
 ### [`v0.8.1`](https://github.com/citycide/glob/compare/v0.8.0...v0.8.1) (2018-07-21)
 
