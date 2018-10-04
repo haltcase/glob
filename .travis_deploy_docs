@@ -12,6 +12,7 @@ if [[ "$BRANCH" != "devel" ]]; then
 fi
 
 TARGET_BRANCH=gh-pages
+LATEST_NAME=latest
 
 # build the documentation
 nimble docs
@@ -22,8 +23,14 @@ pushd $HOME
 git clone --branch=$TARGET_BRANCH https://${GITHUB_TOKEN}@github.com/$TRAVIS_REPO_SLUG.git publish 2>&1 > /dev/null
 cd publish
 
+# wipe the existing files in the latest release
+rm -rf ./$LATEST_NAME
+
+# generate the landing page containing the release history
+nim c --hints:off --verbosity:0 -r $REPO_PATH/docsrc/build_index.nim $REPO_PATH
+
 # copy docs from repo to our temporary publish directory
-cp -r $REPO_PATH/docs ./master
+cp -r $REPO_PATH/docs ./$LATEST_NAME
 cp -r $REPO_PATH/docs ./$TRAVIS_TAG
 
 # push newly built docs to remote

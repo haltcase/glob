@@ -3,6 +3,7 @@ author        = "Bo Lingen"
 description   = "Pure library for matching file paths against Unix style glob patterns."
 license       = "MIT"
 srcDir        = "src"
+skipDirs      = @["docsrc"]
 skipFiles     = @["tests.nim"]
 
 requires "nim >= 0.18.0"
@@ -21,3 +22,5 @@ task docs, "Generate the documentation":
     mkDir("docs/glob")
     exec "nim doc -o:docs/index.html src/glob.nim"
     exec "nim doc -o:docs/glob/regexer.html src/glob/regexer.nim"
+
+  cpFile("docsrc/redirect.html", "docs/index.html")
