@@ -10,7 +10,7 @@ If you're unfamiliar with globs, they essentially let you use a simple language
 to describe what filenames you're looking for with wildcards, placeholders, and
 other pretty intuitive features.
 
-You can find the full [documentation here](https://citycide.github.io/glob/master/glob.html).
+You can find the full [documentation here](https://citycide.github.io/glob).
 
 ## features
 
