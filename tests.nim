@@ -5,8 +5,8 @@ else:
 
 import os
 from algorithm import sortedByIt
-from sequtils import toSeq
-from strutils import split
+from sequtils import toSeq, mapIt
+from strutils import split, toLower
 
 import unittest
 
@@ -36,8 +36,12 @@ proc createStructure (dir: string, files: seq[string]): () -> void =
 
   result = () => removeDir(dir)
 
-proc seqsEqual (seq1, seq2: seq[string]): bool =
-  seq1.sortedByIt(it) == seq2.sortedByIt(it)
+
+proc seqsEqual (seq1, seq2: seq[string], ignoreCase = false): bool =
+  if ignoreCase:
+    seqsEqual(seq1.mapIt(toLower(it)), seq2.mapIt(toLower(it)))
+  else:
+    seq1.sortedByIt(it) == seq2.sortedByIt(it)
 
 suite "globToRegex":
   test "produces equivalent regular expressions":
@@ -377,12 +381,14 @@ suite "pattern walking / listing":
 
     test "`IgnoreCase` enables case insensitive matching":
       let o = defaultGlobOptions + {IgnoreCase}
+      # see https://stackoverflow.com/questions/59797065/how-to-get-original-case-of-a-path-on-osx-eg-tmp-tmp
+      # maybe there is a better way
       check seqsEqual(toSeq(walkGlob("TEMP/**", options = o)), @[
         p"temp/deep/dir/file.nim",
         p"temp/not_as/deep.jpg",
         p"temp/not_as/deep.nim",
         p"temp/shallow.nim"
-      ])
+      ], ignoreCase = true)
 
       when FileSystemCaseSensitive:
         test "`IgnoreCase` works correctly on the glob base":
