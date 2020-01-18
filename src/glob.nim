@@ -369,7 +369,6 @@ func splitPattern* (pattern: string): PatternStems =
 
 func glob* (pattern: string, isDos = isDosDefault, ignoreCase = isDosDefault): Glob =
   ## Constructs a new `Glob <#Glob>`_ object from the given ``pattern``.
-  let pattern = pattern.normalizedPath
   let rgx = globToRegexString(pattern, isDos, ignoreCase)
   let (base, magic) = pattern.splitPattern
   result = Glob(
@@ -383,17 +382,15 @@ func glob* (pattern: string, isDos = isDosDefault, ignoreCase = isDosDefault): G
 func matches* (input: string, glob: Glob): bool =
   ## Returns ``true`` if ``input`` is a match for the given ``glob`` object.
   runnableExamples:
-    const matcher = glob("src/**/*.nim")
-    const matcher2 = glob("bar//src//**/*.nim")
     when defined posix:
+      const matcher = glob("src/**/*.nim")
       doAssert("src/dir/foo.nim".matches(matcher))
       doAssert(not r"src\dir\foo.nim".matches(matcher))
-      doAssert("bar/src/dir/foo.nim".matches(matcher2))
-      doAssert("./bar//src/baz.nim".matches(matcher2))
     elif defined windows:
+      const matcher = glob("src/**/*.nim")
       doAssert(r"src\dir\foo.nim".matches(matcher))
       doAssert(not "src/dir/foo.nim".matches(matcher))
-  let input = input.normalizedPath
+
   input.contains(glob.regex)
 
 func matches* (input, pattern: string; isDos = isDosDefault, ignoreCase = isDosDefault): bool =
@@ -468,14 +465,11 @@ iterator walkGlobKinds* (
     for path, kind in walkGlobKinds("src/**/*", options = optsHiddenNoLinks):
       doAssert(kind notin {pcLinkToFile, pcLinkToDir})
 
-  when pattern is string:
-    let pattern = pattern.glob
-
   let internalRoot =
     if root == "": getCurrentDir()
     elif root.isAbsolute: root
     else: getCurrentDir() / root
-  var matchPattern = pattern.pattern
+  var matchPattern = when pattern is Glob: pattern.pattern else: pattern
   var proceed = matchPattern.hasMagic
 
   template push (path: string, kind: PathComponent, dir = "") =
@@ -505,8 +499,14 @@ iterator walkGlobKinds* (
         if FileLinks in options: push(path, kind, internalRoot)
 
   if proceed:
-    let dir = maybeJoin(internalRoot, pattern.base)
-    matchPattern = pattern.magic.expandGlob(dir, IgnoreCase in options)
+    var dir: string
+    when pattern is Glob:
+      dir = maybeJoin(internalRoot, pattern.base)
+      matchPattern = pattern.magic.expandGlob(dir, IgnoreCase in options)
+    else:
+      let stems = splitPattern(matchPattern)
+      dir = maybeJoin(internalRoot, stems.base)
+      matchPattern = stems.magic
 
     let matcher = matchPattern.globToRegex(ignoreCase = IgnoreCase in options)
     let isRec = "**" in matchPattern
@@ -586,9 +586,6 @@ iterator walkGlob* (
       ## `path` is a file in the `docs` directory or any of its
       ## subdirectories with either a `png` or `svg` file extension
       discard
-
-  when pattern is string:
-    let pattern = pattern.glob
 
   for path, _ in walkGlobKinds(pattern, root, options, filterDescend, filterYield):
     yield path
