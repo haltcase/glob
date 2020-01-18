@@ -1,4 +1,4 @@
-build: script
+build: off
 version: '{build}'
 
 cache:
