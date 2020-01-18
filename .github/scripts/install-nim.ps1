@@ -18,10 +18,12 @@ if (-not $isWindows) {
 
   $env:CHOOSENIM_CHOOSE_VERSION = $nimVersion
   sh $initPath -y
+  $binPath = join-path $home .nimble bin
+  & (join-path $binPath choosenim) update
 
   $nimDir = get-content (join-path $home .choosenim current)
   write-host "::add-path::$(join-path $nimDir bin)"
-  write-host "::add-path::$(join-path $home .nimble bin)"
+  write-host "::add-path::$binPath"
 } else {
   # TODO: use choosenim on Windows once x64 is supported
   # https://github.com/dom96/choosenim/issues/128
