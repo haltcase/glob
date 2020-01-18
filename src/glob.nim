@@ -393,7 +393,10 @@ func matches* (input: string, glob: Glob): bool =
     elif defined windows:
       doAssert(r"src\dir\foo.nim".matches(matcher))
       doAssert(not "src/dir/foo.nim".matches(matcher))
-  let input = input.normalizedPath
+  when defined posix:
+    # temporary hotfix, see https://github.com/citycide/glob/issues/41
+    # ideally, this should be done regardless of posix
+    let input = input.normalizedPath
   input.contains(glob.regex)
 
 func matches* (input, pattern: string; isDos = isDosDefault, ignoreCase = isDosDefault): bool =
