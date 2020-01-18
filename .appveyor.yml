@@ -1,4 +1,3 @@
-build: off
 version: '{build}'
 
 cache:
