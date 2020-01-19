@@ -369,7 +369,9 @@ func splitPattern* (pattern: string): PatternStems =
 
 func glob* (pattern: string, isDos = isDosDefault, ignoreCase = isDosDefault): Glob =
   ## Constructs a new `Glob <#Glob>`_ object from the given ``pattern``.
-  let pattern = pattern.normalizedPath
+  when defined(posix):
+    # causes complications on windows since that would change / to \
+    let pattern = pattern.normalizedPath
   let rgx = globToRegexString(pattern, isDos, ignoreCase)
   let (base, magic) = pattern.splitPattern
   result = Glob(
@@ -393,7 +395,9 @@ func matches* (input: string, glob: Glob): bool =
     elif defined windows:
       doAssert(r"src\dir\foo.nim".matches(matcher))
       doAssert(not "src/dir/foo.nim".matches(matcher))
-  let input = input.normalizedPath
+  when defined(posix):
+    # see note in `glob`
+    let input = input.normalizedPath
   input.contains(glob.regex)
 
 func matches* (input, pattern: string; isDos = isDosDefault, ignoreCase = isDosDefault): bool =
