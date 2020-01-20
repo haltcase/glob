@@ -12,7 +12,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macOS-latest]
+        # TODO: restore macOS-latest when choosenim #122 is solved
+        # https://github.com/dom96/choosenim/issues/122
+        os: [windows-latest, ubuntu-latest]
         nim: [stable, devel]
     name: Nim ${{ matrix.nim }} (${{ matrix.os }})
     steps:
