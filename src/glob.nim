@@ -314,7 +314,7 @@ iterator initStack (
   template push (path: string) =
     var kind: PathComponent
     if path.pathType(kind) and kind in kinds:
-      yield (path.expandFilename, kind)
+      yield (path.absolutePath, kind)
 
   let normalized =
     when FileSystemCaseSensitive:
