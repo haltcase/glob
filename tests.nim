@@ -4,6 +4,7 @@ else:
   from future import `=>`, `->`
 
 import os
+from random import rand, randomize
 from algorithm import sortedByIt
 from sequtils import toSeq, mapIt
 from strutils import split, toLower
@@ -42,6 +43,21 @@ proc seqsEqual (seq1, seq2: seq[string], ignoreCase = false): bool =
     seqsEqual(seq1.mapIt(toLower(it)), seq2.mapIt(toLower(it)))
   else:
     seq1.sortedByIt(it) == seq2.sortedByIt(it)
+
+proc setTempDir (): () -> void =
+  var dir = os.getTempDir() / "glob-"
+  for _ in .. 10:
+    dir &= rand('a'..'z')
+  dir.removeDir
+  dir.createDir
+  dir.setCurrentDir
+
+  result = proc() =
+    os.getTempDir().setCurrentDir
+    dir.removeDir
+
+randomize()
+let globalCleanup = setTempDir()
 
 suite "globToRegex":
   test "produces equivalent regular expressions":
@@ -472,3 +488,5 @@ suite "utility procs":
     check "**/*.nim".splitPattern == ("", "**/*.nim")
     check "literal-match.html".splitPattern == ("", "literal-match.html")
     check "src/deep/dir/[[:digit:]]*.{png,svg}".splitPattern == ("src/deep/dir", "[[:digit:]]*.{png,svg}")
+
+globalCleanup()
