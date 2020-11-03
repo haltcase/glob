@@ -7,7 +7,7 @@ skipDirs      = @["docsrc"]
 skipFiles     = @["tests.nim"]
 
 requires "nim >= 0.18.0"
-requires "regex >= 0.16.0 & < 0.17.0"
+requires "regex > 0.17.0"
 
 task test, "Run the test suite":
   exec "nimble c -y --hints:off --verbosity:0 -r tests.nim"
