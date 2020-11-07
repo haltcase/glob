@@ -1,3 +1,26 @@
+<a name="v0.9.1"></a>
+### [`v0.9.1`](https://github.com/citycide/glob/compare/v0.9.0...v0.9.1) (2020-11-07)
+
+
+###### BUG FIXES
+
+* require regex < 0.17 ([#50](https://github.com/citycide/glob/pull/50))) ([`4258cb5`](https://github.com/citycide/glob/commit/4258cb5799792a51e19f56bb8fe8473adc687f82))
+* handle symlinks correctly, closes #36 ([#38](https://github.com/citycide/glob/pull/38))) ([`068369b`](https://github.com/citycide/glob/commit/068369b2a9f4e9a47286855c06ca61f3a0b4c2da))
+* normalize input paths on posix; simplify code a bit ([#45](https://github.com/citycide/glob/pull/45))) ([`28e5f93`](https://github.com/citycide/glob/commit/28e5f939abae8f60e90bd38773ebea29b09735a6)), closes [#35](https://github.com/citycide/glob/issues/35), [#35](https://github.com/citycide/glob/issues/35)
+* normalize input paths ([#37](https://github.com/citycide/glob/pull/37))) ([`4171cfa`](https://github.com/citycide/glob/commit/4171cfa2560ac0436a9f0be5e2f7e6fb384c76a9))
+
+
+###### CONTRIBUTORS
+
+This release was made possible by:
+
+* [@timotheecour](https://github.com/timotheecour)
+* [@xzfc](https://github.com/xzfc)
+
+Thanks!
+
+---
+
 <a name="v0.9.0"></a>
 ### [`v0.9.0`](https://github.com/citycide/glob/compare/v0.8.1...v0.9.0) (2018-10-02)
 
