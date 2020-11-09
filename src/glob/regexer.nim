@@ -7,7 +7,7 @@ it separately isn't necessary, it could be imported independently of the main
 
 from strutils import spaces
 
-type GlobSyntaxError* = object of Exception
+type GlobSyntaxError* = object of CatchableError
   ## Raised if the parsing of a glob pattern fails.
 
 const
