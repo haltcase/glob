@@ -42,15 +42,12 @@ jobs:
         run: |
           nim r --hints:off --verbosity:0 $GITHUB_WORKSPACE/docsrc/build_index.nim $GITHUB_WORKSPACE
 
-      - run: ls -lrt $GITHUB_WORKSPACE/gh-pages
-      - run: ls -lrt ./gh-pages
-
       - name: Copy documentation
         run: |
           rm -rf ./latest
           cp -r $GITHUB_WORKSPACE/docs ./latest
           cp -r $GITHUB_WORKSPACE/docs ./${{ steps.vars.outputs.tag }}
-        working-directory: $GITHUB_WORKSPACE/${{ steps.vars.outputs.target_branch }}
+        working-directory: ./${{ steps.vars.outputs.target_branch }}
 
       - name: Deploy documentation
         uses: JamesIves/github-pages-deploy-action@3.7.1
