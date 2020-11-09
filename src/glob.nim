@@ -292,16 +292,17 @@ func maybeJoin (p1, p2: string): string =
     else: p1 / p2
   )
 
-func makeCaseInsensitive (pattern: string): string =
-  result = ""
-  for c in pattern:
-    if c in Letters:
-      result.add '['
-      result.add c.toLowerAscii
-      result.add c.toUpperAscii
-      result.add ']'
-    else:
-      result.add c
+when FileSystemCaseSensitive:
+  func makeCaseInsensitive (pattern: string): string =
+    result = ""
+    for c in pattern:
+      if c in Letters:
+        result.add '['
+        result.add c.toLowerAscii
+        result.add c.toUpperAscii
+        result.add ']'
+      else:
+        result.add c
 
 # helper to find file system items case insensitively
 # on case insensitive systems this is equivalent to an existence check
