@@ -6,7 +6,7 @@ srcDir        = "src"
 skipDirs      = @["docsrc"]
 skipFiles     = @["tests.nim"]
 
-requires "nim >= 0.18.0"
+requires "nim >= 1.0.0 & < 2.0.0"
 requires "regex >= 0.17.1 & < 0.18.0"
 
 task test, "Run the test suite":
@@ -14,13 +14,5 @@ task test, "Run the test suite":
 
 task docs, "Generate the documentation":
   rmDir("docs")
-  if (NimMajor, NimMinor, NimPatch) >= (0, 19, 0):
-    echo "Docs generation is broken in Nim v0.19.0"
-    echo "If this fails, please use a more recent devel version or < 0.19.0"
-    exec "nim doc --project -o:docs src/glob.nim"
-  else:
-    mkDir("docs/glob")
-    exec "nim doc -o:docs/index.html src/glob.nim"
-    exec "nim doc -o:docs/glob/regexer.html src/glob/regexer.nim"
-
+  exec "nim doc --project -o:docs src/glob.nim"
   cpFile("docsrc/redirect.html", "docs/index.html")
