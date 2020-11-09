@@ -1,3 +1,18 @@
+<a name="v0.10.0"></a>
+### [`v0.10.0`](https://github.com/citycide/glob/compare/v0.9.1...v0.10.0) (2020-11-09)
+
+
+###### BREAKING CHANGES
+
+* Nim v1.x is now required.
+
+###### BUG FIXES
+
+* make `GlobSyntaxError` derive from `CatchableError` ([`09e50e1`](https://github.com/citycide/glob/commit/09e50e1b89efa886a4a1ec17ac8cc0f8c55006f2))
+* change`toPattern` to `re` to avoid deprecation warnings ([`cb7cdd9`](https://github.com/citycide/glob/commit/cb7cdd9a2ef7e878bdd56941cb4a41da8b9fd9d0))
+
+---
+
 <a name="v0.9.1"></a>
 ### [`v0.9.1`](https://github.com/citycide/glob/compare/v0.9.0...v0.9.1) (2020-11-07)
 
