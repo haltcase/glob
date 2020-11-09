@@ -64,7 +64,10 @@ jobs:
           TAG=${{ steps.vars.outputs.tag }}
           LAST_TAG=${{ steps.vars.outputs.last_tag }}
           BODY=$(fugitive changelog --tag:${TAG} --last-tag:${LAST_TAG} --no-anchor --no-title --no-divider)
-          echo ::set-output name=body::${BODY}
+
+          echo 'CHANGELOG_BODY<<EOF' >> $GITHUB_ENV
+          $BODY | tee -a $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
 
       - name: Create release
         id: create_release
@@ -74,4 +77,4 @@ jobs:
         with:
           tag_name: ${{ steps.vars.outputs.tag }}
           release_name: ${{ steps.vars.outputs.tag }}
-          body: ${{ steps.changelog.outputs.body }}
+          body: ${{ env.CHANGELOG_BODY }}
