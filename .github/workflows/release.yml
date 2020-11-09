@@ -49,7 +49,7 @@ jobs:
         working-directory: $GITHUB_WORKSPACE/${{ steps.vars.outputs.target_branch }}
 
       - name: Deploy documentation
-        uses: JamesIves/github-pages-deploy-action@3
+        uses: JamesIves/github-pages-deploy-action@3.7.1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: ${{ steps.vars.outputs.target_branch }}
