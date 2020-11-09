@@ -342,7 +342,7 @@ proc expandGlob (pattern, root: string, ignoreCase: bool): string =
 
 func globToRegex* (pattern: string, isDos = isDosDefault, ignoreCase = isDosDefault): Regex =
   ## Converts a string glob pattern to a regex pattern.
-  globToRegexString(pattern, isDos, ignoreCase).toPattern
+  globToRegexString(pattern, isDos, ignoreCase).re
 
 func splitPattern* (pattern: string): PatternStems =
   ## Splits the given pattern into two parts: the ``base`` which is the part
@@ -377,7 +377,7 @@ func glob* (pattern: string, isDos = isDosDefault, ignoreCase = isDosDefault): G
   result = Glob(
     pattern: pattern,
     regexStr: rgx,
-    regex: rgx.toPattern,
+    regex: rgx.re,
     base: base,
     magic: magic
   )
