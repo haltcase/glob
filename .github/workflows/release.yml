@@ -43,7 +43,6 @@ jobs:
           nim r --hints:off --verbosity:0 $GITHUB_WORKSPACE/docsrc/build_index.nim $GITHUB_WORKSPACE
       - name: Copy documentation
         run: |
-          ls
           rm -rf ./latest
           cp -r $GITHUB_WORKSPACE/docs ./latest
           cp -r $GITHUB_WORKSPACE/docs ./${{ steps.vars.outputs.tag }}
