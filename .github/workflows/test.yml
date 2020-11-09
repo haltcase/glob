@@ -9,29 +9,25 @@ on:
 
 jobs:
   test:
+    if: "!contains(github.event.head_commit.message, '[ci skip]')"
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # TODO: restore macOS-latest when choosenim #122 is solved
-        # https://github.com/dom96/choosenim/issues/122
-        os: [windows-latest, ubuntu-latest]
-        nim: [stable, devel]
+        os: [windows-latest, macOS-latest, ubuntu-latest]
+        nim: ['1.4.0']
     name: Nim ${{ matrix.nim }} (${{ matrix.os }})
     steps:
-      - uses: actions/checkout@master
-      - name: Cache choosenim
-        id: cache-choosenim
-        uses: actions/cache@v1
-        with:
-          path: ~/.choosenim
-          key: ${{ runner.os }}-choosenim-stable
+      - uses: actions/checkout@v2
       - name: Cache nimble
         id: cache-nimble
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
           path: ~/.nimble
-          key: ${{ runner.os }}-nimble-stable
-      - uses: jiro4989/setup-nim-action@v1.0.1
+          key: ${{ runner.os }}-nimble-${{ matrix.nim }}
+        if: runner.os != 'Windows'
+      - uses: jiro4989/setup-nim-action@v1
+        with:
+          nim-version: ${{ matrix.nim }}
       - name: Install dependencies
         run: nimble install -y
       - name: Run tests
