@@ -42,9 +42,8 @@ jobs:
         run: |
           nim r --hints:off --verbosity:0 $GITHUB_WORKSPACE/docsrc/build_index.nim $GITHUB_WORKSPACE
 
-      - run: ls -lrt
-      - run: echo "$GITHUB_WORKSPACE"
-      - run: ls -lrt $GITHUB_WORKSPACE
+      - run: ls -lrt $GITHUB_WORKSPACE/gh-pages
+      - run: ls -lrt ./gh-pages
 
       - name: Copy documentation
         run: |
