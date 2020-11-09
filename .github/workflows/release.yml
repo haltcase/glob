@@ -9,6 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     name: Update documentation
     steps:
+      # check out main branch
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
       - id: vars
         run: |
           echo ::set-output name=tag::${GITHUB_REF#refs/*/}
@@ -16,14 +21,13 @@ jobs:
           echo ::set-output name=target_branch::gh-pages
           echo ::set-output name=latest_name::latest
 
-      - uses: actions/checkout@v2
-        with:
-          persist-credentials: false
+      # check out documentation branch
       - uses: actions/checkout@v2
         with:
           ref: ${{ steps.vars.outputs.target_branch }}
           path: ${{ steps.vars.outputs.target_branch }}
           persist-credentials: false
+
       - name: Cache nimble
         id: cache-nimble
         uses: actions/cache@v2
@@ -37,11 +41,9 @@ jobs:
 
       - name: Build documentation
         run: nimble docs
-
       - name: Generate landing page
         run: |
           nim r --hints:off --verbosity:0 $GITHUB_WORKSPACE/docsrc/build_index.nim $GITHUB_WORKSPACE
-
       - name: Copy documentation
         run: |
           rm -rf ./latest
