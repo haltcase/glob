@@ -1,4 +1,4 @@
-# glob &middot; [![nimble](https://flat.badgen.net/badge/available%20on/nimble/yellow)](https://nimble.directory/pkg/glob) ![license](https://flat.badgen.net/github/license/citycide/glob) [![Travis branch](https://flat.badgen.net/travis/citycide/glob/master)](https://travis-ci.com/citycide/glob) [![AppVeyor](https://flat.badgen.net/appveyor/ci/citycide/glob/master)](https://ci.appveyor.com/project/citycide/glob)
+# glob &middot; [![nimble](https://flat.badgen.net/badge/available%20on/nimble/yellow)](https://nimble.directory/pkg/glob) ![license](https://flat.badgen.net/github/license/citycide/glob) [![Travis branch](https://flat.badgen.net/travis/citycide/glob/master)](https://travis-ci.com/citycide/glob) ![GitHub Actions](https://flat.badgen.net/github/checks/citycide/glob)
 
 > Match file paths against Unix style patterns called _globs_.
 
