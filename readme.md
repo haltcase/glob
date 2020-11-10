@@ -58,6 +58,21 @@ manager [Nimble][nimble].
 3. Make your changes: `src`, `tests.nim`
 4. Run tests: `nimble test`
 
+Commits should follow the [Conventional Commits][conventional] standard, which
+allows for automated changelog generation.
+
+Releases are deployed automatically when new tags are created. For collaborators
+on this project, please follow this process for releasing a new version:
+
+1. Ensure tests are passing, as usual.
+2. Update the version in `glob.nimble` per [semver][semver].
+3. Run `nimble prep_release`, which will update `changelog.md`, commit changes
+to `glob.nimble` & `changelog.md`, and create a new tag.
+4. Run `git push --follow-tags` to ensure the tag is pushed along with the commit.
+5. GitHub Actions will take it from there: the new tag will trigger the
+[`release` workflow][release-wf] to deploy a new version of the docs
+and create a release on GitHub.
+
 ## contributing
 
 This project is open to contributions of all kinds! Please check and search
@@ -72,3 +87,7 @@ MIT © [Bo Lingen / citycide](https://github.com/citycide)
 [wiki]: https://en.wikipedia.org/wiki/Glob_(programming)
 [nim]: https://github.com/nim-lang/nim
 [nimble]: https://github.com/nim-lang/nimble
+[conventional]: https://www.conventionalcommits.org/en/v1.0.0/#summary
+[fugitive]: https://github.com/citycide/fugitive
+[semver]: https://semver.org/
+[release-wf]: https://github.com/citycide/glob/blob/master/.github/workflows/release.yml
