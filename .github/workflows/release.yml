@@ -60,6 +60,9 @@ jobs:
       #     GIT_CONFIG_EMAIL: action@github.com
       #     COMMIT_MESSAGE: 'docs: update documentation to ${{ steps.vars.outputs.tag }}'
 
+      - run: echo $(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))
+      - run: echo $(fugitive changelog --tag:${TAG} --last-tag:v0.9.1 --no-anchor --no-title --no-divider)
+
       - id: changelog
         run: |
           nimble install -y fugitive
