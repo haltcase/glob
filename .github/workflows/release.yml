@@ -61,15 +61,14 @@ jobs:
       #     COMMIT_MESSAGE: 'docs: update documentation to ${{ steps.vars.outputs.tag }}'
 
       - run: echo $(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))
+      - run: nimble install -y fugitive
       - run: echo $(fugitive changelog --tag:${TAG} --last-tag:v0.9.1 --no-anchor --no-title --no-divider)
 
       - id: changelog
         run: |
-          nimble install -y fugitive
           TAG=${{ steps.vars.outputs.tag }}
           LAST_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))
           BODY=$(fugitive changelog --tag:${TAG} --last-tag:${LAST_TAG} --no-anchor --no-title --no-divider)
-          echo $BODY
 
           echo 'CHANGELOG_BODY<<EOF' >> $GITHUB_ENV
           $BODY | tee -a $GITHUB_ENV
