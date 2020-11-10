@@ -73,10 +73,9 @@ jobs:
         run: |
           TAG=${{ steps.vars.outputs.tag }}
           LAST_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))
-          BODY=$(fugitive changelog --tag:${TAG} --last-tag:${LAST_TAG} --no-anchor --no-title --no-divider)
 
-          echo "CHANGELOG_BODY<<'EOF'" >> $GITHUB_ENV
-          "test" >> $GITHUB_ENV
+          echo 'CHANGELOG_BODY<<EOF' >> $GITHUB_ENV
+          fugitive changelog --tag:${TAG} --last-tag:${LAST_TAG} --no-anchor --no-title --no-divider >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ github.token }}
