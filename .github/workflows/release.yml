@@ -7,7 +7,7 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    name: Update documentation
+    name: Create release and update documentation
     steps:
       - name: Set variables
         id: vars
