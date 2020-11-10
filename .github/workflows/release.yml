@@ -9,17 +9,16 @@ jobs:
     runs-on: ubuntu-latest
     name: Update documentation
     steps:
+      - id: vars
+        run: |
+          echo "::set-output name=tag::${GITHUB_REF#refs/*/}"
+          echo "::set-output name=target_branch::gh-pages"
+          echo "::set-output name=latest_name::latest"
+
       # check out main branch
       - uses: actions/checkout@v2
         with:
           persist-credentials: false
-
-      - id: vars
-        run: |
-          echo "::set-output name=tag::${GITHUB_REF#refs/*/}"
-          echo "::set-output name=last_tag::$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))"
-          echo "::set-output name=target_branch::gh-pages"
-          echo "::set-output name=latest_name::latest"
 
       # check out documentation branch
       - uses: actions/checkout@v2
@@ -46,38 +45,39 @@ jobs:
           nim r --hints:off --verbosity:0 $GITHUB_WORKSPACE/docsrc/build_index.nim $GITHUB_WORKSPACE
       - name: Copy documentation
         run: |
-          rm -rf ./latest
-          cp -r $GITHUB_WORKSPACE/docs ./latest
+          rm -rf ./${{ setps.vars.outputs.latest_name }}
+          cp -r $GITHUB_WORKSPACE/docs ./${{ setps.vars.outputs.latest_name }}
           cp -r $GITHUB_WORKSPACE/docs ./${{ steps.vars.outputs.tag }}
         working-directory: ./${{ steps.vars.outputs.target_branch }}
 
-      - name: Deploy documentation
-        uses: JamesIves/github-pages-deploy-action@3.7.1
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: ${{ steps.vars.outputs.target_branch }}
-          FOLDER: ${{ steps.vars.outputs.target_branch }}
-          GIT_CONFIG_NAME: GitHub Action
-          GIT_CONFIG_EMAIL: action@github.com
-          COMMIT_MESSAGE: 'docs: update documentation to ${{ steps.vars.outputs.tag }}'
+      # - name: Deploy documentation
+      #   uses: JamesIves/github-pages-deploy-action@3.7.1
+      #   with:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     BRANCH: ${{ steps.vars.outputs.target_branch }}
+      #     FOLDER: ${{ steps.vars.outputs.target_branch }}
+      #     GIT_CONFIG_NAME: GitHub Action
+      #     GIT_CONFIG_EMAIL: action@github.com
+      #     COMMIT_MESSAGE: 'docs: update documentation to ${{ steps.vars.outputs.tag }}'
 
       - id: changelog
         run: |
           nimble install -y fugitive
           TAG=${{ steps.vars.outputs.tag }}
-          LAST_TAG=${{ steps.vars.outputs.last_tag }}
+          LAST_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))
           BODY=$(fugitive changelog --tag:${TAG} --last-tag:${LAST_TAG} --no-anchor --no-title --no-divider)
+          echo $BODY
 
           echo 'CHANGELOG_BODY<<EOF' >> $GITHUB_ENV
           $BODY | tee -a $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
 
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.vars.outputs.tag }}
-          release_name: ${{ steps.vars.outputs.tag }}
-          body: ${{ env.CHANGELOG_BODY }}
+      # - name: Create release
+      #   id: create_release
+      #   uses: actions/create-release@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     tag_name: ${{ steps.vars.outputs.tag }}
+      #     release_name: ${{ steps.vars.outputs.tag }}
+      #     body: ${{ env.CHANGELOG_BODY }}
