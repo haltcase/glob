@@ -16,10 +16,10 @@ jobs:
 
       - id: vars
         run: |
-          echo ::set-output name=tag::${GITHUB_REF#refs/*/}
-          echo ::set-output name=last_tag::$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))
-          echo ::set-output name=target_branch::gh-pages
-          echo ::set-output name=latest_name::latest
+          echo "::set-output name=tag::${GITHUB_REF#refs/*/}"
+          echo "::set-output name=last_tag::$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))"
+          echo "::set-output name=target_branch::gh-pages"
+          echo "::set-output name=latest_name::latest"
 
       # check out documentation branch
       - uses: actions/checkout@v2
