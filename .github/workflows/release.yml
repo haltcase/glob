@@ -7,23 +7,27 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    name: Update documentation
+    name: Create release and update documentation
     steps:
-      - id: vars
+      - name: Set variables
+        id: vars
         run: |
-          echo ::set-output name=tag::${GITHUB_REF#refs/*/}
-          echo ::set-output name=last_tag::$(git describe --abbrev=0 --tags `git rev-list --tags --skip=1 --max-count=1`)
-          echo ::set-output name=target_branch::gh-pages
-          echo ::set-output name=latest_name::latest
+          echo "::set-output name=tag::${GITHUB_REF#refs/*/}"
+          echo "::set-output name=target_branch::gh-pages"
+          echo "::set-output name=latest_name::latest"
 
-      - uses: actions/checkout@v2
+      - name: Check out main branch
+        uses: actions/checkout@v2
         with:
           persist-credentials: false
-      - uses: actions/checkout@v2
+
+      - name: Check out documentation branch
+        uses: actions/checkout@v2
         with:
           ref: ${{ steps.vars.outputs.target_branch }}
           path: ${{ steps.vars.outputs.target_branch }}
           persist-credentials: false
+
       - name: Cache nimble
         id: cache-nimble
         uses: actions/cache@v2
@@ -31,22 +35,22 @@ jobs:
           path: ~/.nimble
           key: ${{ runner.os }}-nimble
         if: runner.os != 'Windows'
-      - uses: jiro4989/setup-nim-action@v1
+      - name: Set up Nim
+        uses: jiro4989/setup-nim-action@v1
         with:
           nim-version: stable
 
       - name: Build documentation
         run: nimble docs
-
       - name: Generate landing page
         run: |
           nim r --hints:off --verbosity:0 $GITHUB_WORKSPACE/docsrc/build_index.nim $GITHUB_WORKSPACE
       - name: Copy documentation
         run: |
-          rm -rf ./latest
-          cp -r $GITHUB_WORKSPACE/docs ./latest
+          rm -rf ./${{ steps.vars.outputs.latest_name }}
+          cp -r $GITHUB_WORKSPACE/docs ./${{ steps.vars.outputs.latest_name }}
           cp -r $GITHUB_WORKSPACE/docs ./${{ steps.vars.outputs.tag }}
-        working-directory: $GITHUB_WORKSPACE/${{ steps.vars.outputs.target_branch }}
+        working-directory: ./${{ steps.vars.outputs.target_branch }}
 
       - name: Deploy documentation
         uses: JamesIves/github-pages-deploy-action@3.7.1
@@ -58,16 +62,25 @@ jobs:
           GIT_CONFIG_EMAIL: action@github.com
           COMMIT_MESSAGE: 'docs: update documentation to ${{ steps.vars.outputs.tag }}'
 
-      - id: changelog
+      # this is necessary to make retrieving the previous tag possible
+      # without it, the previous tag is somehow the same as the current tag
+      # this seems to be because of actions/checkout@2
+      - name: Clean git tags
+        run: git fetch --prune --unshallow --tags --force
+      - name: Install fugitive
+        run: nimble install -y fugitive
+
+      - name: Create changelog
+        id: changelog
         run: |
-          nimble install -y fugitive
           TAG=${{ steps.vars.outputs.tag }}
-          LAST_TAG=${{ steps.vars.outputs.last_tag }}
-          BODY=$(fugitive changelog --tag:${TAG} --last-tag:${LAST_TAG} --no-anchor --no-title --no-divider)
+          LAST_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))
 
           echo 'CHANGELOG_BODY<<EOF' >> $GITHUB_ENV
-          $BODY | tee -a $GITHUB_ENV
+          fugitive changelog --tag:${TAG} --last-tag:${LAST_TAG} --no-anchor --no-title --no-divider >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Create release
         id: create_release
