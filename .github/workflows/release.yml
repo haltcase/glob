@@ -63,7 +63,7 @@ jobs:
       - run: echo $(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))
       - run: nimble install -y fugitive
       - run: echo $(fugitive changelog --tag:${TAG} --last-tag:v0.9.1 --no-anchor --no-title --no-divider)
-        with:
+        env:
           GITHUB_TOKEN: ${{ github.token }}
 
       - id: changelog
