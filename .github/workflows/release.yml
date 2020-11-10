@@ -60,22 +60,28 @@ jobs:
       #     GIT_CONFIG_EMAIL: action@github.com
       #     COMMIT_MESSAGE: 'docs: update documentation to ${{ steps.vars.outputs.tag }}'
 
-      - run: git fetch --prune --unshallow --tags --force
-      - run: echo $(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))
-      - run: nimble install -y fugitive
-      - run: echo $(fugitive changelog --tag:${TAG} --last-tag:v0.9.1 --no-anchor --no-title --no-divider)
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+      # this is necessary to make retrieving the previous tag possible
+      # without it, the previous tag is somehow the same as the current tag
+      # this seems to be because of actions/checkout@2
+      - name: Clean git tags
+        run: git fetch --prune --unshallow --tags --force
+      - name: Install fugitive
+        run: nimble install -y fugitive
 
-      - id: changelog
+      - name: Create changelog
+        id: changelog
         run: |
           TAG=${{ steps.vars.outputs.tag }}
           LAST_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))
           BODY=$(fugitive changelog --tag:${TAG} --last-tag:${LAST_TAG} --no-anchor --no-title --no-divider)
 
           echo 'CHANGELOG_BODY<<EOF' >> $GITHUB_ENV
-          $BODY | tee -a $GITHUB_ENV
+          $BODY >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      
+      - run: echo ${{ env.CHANGELOG_BODY }}
 
       # - name: Create release
       #   id: create_release
