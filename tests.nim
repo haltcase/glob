@@ -1,13 +1,9 @@
-when (NimMajor, NimMinor, NimPatch) >= (0, 18, 1):
-  from sugar import `=>`, `->`
-else:
-  from future import `=>`, `->`
-
 import os
 from random import rand, randomize
 from algorithm import sortedByIt
 from sequtils import toSeq, mapIt
 from strutils import split, toLower
+from sugar import `=>`, `->`
 
 import unittest
 
