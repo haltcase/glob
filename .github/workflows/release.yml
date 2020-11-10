@@ -9,19 +9,20 @@ jobs:
     runs-on: ubuntu-latest
     name: Update documentation
     steps:
-      - id: vars
+      - name: Set variables
+        id: vars
         run: |
           echo "::set-output name=tag::${GITHUB_REF#refs/*/}"
           echo "::set-output name=target_branch::gh-pages"
           echo "::set-output name=latest_name::latest"
 
-      # check out main branch
-      - uses: actions/checkout@v2
+      - name: Check out main branch
+        uses: actions/checkout@v2
         with:
           persist-credentials: false
 
-      # check out documentation branch
-      - uses: actions/checkout@v2
+      - name: Check out documentation branch
+        uses: actions/checkout@v2
         with:
           ref: ${{ steps.vars.outputs.target_branch }}
           path: ${{ steps.vars.outputs.target_branch }}
@@ -34,7 +35,8 @@ jobs:
           path: ~/.nimble
           key: ${{ runner.os }}-nimble
         if: runner.os != 'Windows'
-      - uses: jiro4989/setup-nim-action@v1
+      - name: Set up Nim
+        uses: jiro4989/setup-nim-action@v1
         with:
           nim-version: stable
 
