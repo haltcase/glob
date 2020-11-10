@@ -50,15 +50,15 @@ jobs:
           cp -r $GITHUB_WORKSPACE/docs ./${{ steps.vars.outputs.tag }}
         working-directory: ./${{ steps.vars.outputs.target_branch }}
 
-      # - name: Deploy documentation
-      #   uses: JamesIves/github-pages-deploy-action@3.7.1
-      #   with:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     BRANCH: ${{ steps.vars.outputs.target_branch }}
-      #     FOLDER: ${{ steps.vars.outputs.target_branch }}
-      #     GIT_CONFIG_NAME: GitHub Action
-      #     GIT_CONFIG_EMAIL: action@github.com
-      #     COMMIT_MESSAGE: 'docs: update documentation to ${{ steps.vars.outputs.tag }}'
+      - name: Deploy documentation
+        uses: JamesIves/github-pages-deploy-action@3.7.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ steps.vars.outputs.target_branch }}
+          FOLDER: ${{ steps.vars.outputs.target_branch }}
+          GIT_CONFIG_NAME: GitHub Action
+          GIT_CONFIG_EMAIL: action@github.com
+          COMMIT_MESSAGE: 'docs: update documentation to ${{ steps.vars.outputs.tag }}'
 
       # this is necessary to make retrieving the previous tag possible
       # without it, the previous tag is somehow the same as the current tag
@@ -79,15 +79,13 @@ jobs:
           echo 'EOF' >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ github.token }}
-      
-      - run: echo ${{ env.CHANGELOG_BODY }}
 
-      # - name: Create release
-      #   id: create_release
-      #   uses: actions/create-release@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     tag_name: ${{ steps.vars.outputs.tag }}
-      #     release_name: ${{ steps.vars.outputs.tag }}
-      #     body: ${{ env.CHANGELOG_BODY }}
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.vars.outputs.tag }}
+          release_name: ${{ steps.vars.outputs.tag }}
+          body: ${{ env.CHANGELOG_BODY }}
