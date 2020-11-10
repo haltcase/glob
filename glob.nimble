@@ -21,7 +21,7 @@ task prep_release, "Prepare for release":
   if "fugitive".findExe == "":
     echo "Could not locate `fugitive` for updating the changelog."
     echo "Please run `nimble install fugitive` or ensure it is in your PATH."
-  else if "git".findExe == "":
+  elif "git".findExe == "":
     echo "Could not locate `git`. Please install it or ensure it is in your PATH."
   else:
     exec "fugitive changelog changelog.md -t:v" & version
