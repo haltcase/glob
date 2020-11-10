@@ -76,7 +76,7 @@ jobs:
           BODY=$(fugitive changelog --tag:${TAG} --last-tag:${LAST_TAG} --no-anchor --no-title --no-divider)
 
           echo 'CHANGELOG_BODY<<EOF' >> $GITHUB_ENV
-          $BODY >> $GITHUB_ENV
+          "test" >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ github.token }}
