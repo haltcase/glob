@@ -1,0 +1,23 @@
+Syntax	glob.html#syntax	 Syntax	
+Character classes	glob.html#syntax-character-classes	  Character classes	
+Matching special characters	glob.html#character-classes-matching-special-characters	   Matching special characters	
+POSIX classes	glob.html#character-classes-posix-classes	   POSIX classes	
+Extended pattern matching	glob.html#syntax-extended-pattern-matching	  Extended pattern matching	
+Examples	glob.html#examples	 Examples	
+Roadmap	glob.html#roadmap	 Roadmap	
+Glob	glob.html#Glob	glob: Glob	
+GlobEntry	glob.html#GlobEntry	glob: GlobEntry	
+PatternStems	glob.html#PatternStems	glob: PatternStems	
+GlobOption	glob.html#GlobOption	glob: GlobOption	
+GlobOptions	glob.html#GlobOptions	glob: GlobOptions	
+FilterDescend	glob.html#FilterDescend	glob: FilterDescend	
+FilterYield	glob.html#FilterYield	glob: FilterYield	
+defaultGlobOptions	glob.html#defaultGlobOptions	glob: defaultGlobOptions	
+hasMagic	glob.html#hasMagic,string	glob: hasMagic(str: string): bool	
+globToRegex	glob.html#globToRegex,string	glob: globToRegex(pattern: string; isDos = isDosDefault; ignoreCase = isDosDefault): Regex	
+splitPattern	glob.html#splitPattern,string	glob: splitPattern(pattern: string): PatternStems	
+glob	glob.html#glob,string	glob: glob(pattern: string; isDos = isDosDefault; ignoreCase = isDosDefault): Glob	
+matches	glob.html#matches,string,Glob	glob: matches(input: string; glob: Glob): bool	
+matches	glob.html#matches,string,string	glob: matches(input, pattern: string; isDos = isDosDefault; ignoreCase = isDosDefault): bool	
+walkGlobKinds	glob.html#walkGlobKinds.i,,string,FilterDescend,FilterYield	glob: walkGlobKinds(pattern: string | Glob; root = &quot;&quot;; options = defaultGlobOptions;\n              filterDescend: FilterDescend = nil; filterYield: FilterYield = nil): GlobEntry	
+walkGlob	glob.html#walkGlob.i,,string,FilterDescend,FilterYield	glob: walkGlob(pattern: string | Glob; root = &quot;&quot;; options = defaultGlobOptions;\n         filterDescend: FilterDescend = nil; filterYield: FilterYield = nil): string	
