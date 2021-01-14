@@ -26,5 +26,5 @@ task prep_release, "Prepare for release":
   else:
     exec "fugitive changelog changelog.md -t:v" & version
     exec "git add changelog.md glob.nimble"
-    exec "git commit -m 'chore(version): " & version & "'"
-    exec "git tag -a v" & version & "-m v" & version
+    exec "git commit -m 'release: " & version & "'"
+    exec "git tag -a v" & version & " -m v" & version
