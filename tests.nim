@@ -33,7 +33,6 @@ proc createStructure (dir: string, files: seq[string]): () -> void =
 
   result = () => removeDir(dir)
 
-
 proc seqsEqual (seq1, seq2: seq[string], ignoreCase = false): bool =
   if ignoreCase:
     seqsEqual(seq1.mapIt(toLower(it)), seq2.mapIt(toLower(it)))
@@ -291,15 +290,12 @@ suite "regex matching":
     check isMatchTest("*(foo|ba[rt]).nim", "baz.nim").not
     check isMatchTest("*(foo|ba[rt]).nim", "fun.nim").not
 
-  test "extended (!) - currently unsupported":
-    # currently unsupported in regex implementation
-    expect GlobSyntaxError: discard globToRegexString("!(boo).txt")
-
-    # check isMatchTest("!(boo).nim", "foo.nim")
-    # check isMatchTest("!(foo|baz)bar.nim", "buzbar.nim")
-    # check isMatchTest("!bar.nim", "!bar.nim")
-    # check isMatchTest("!({foo,bar})baz.nim", "notbaz.nim")
-    # check isMatchTest("!({foo,bar})baz.nim", "foobaz.nim").not
+  test "extended (!)":
+    check isMatchTest("!bar.nim", "!bar.nim")
+    check isMatchTest("!(boo).nim", "foo.nim")
+    check isMatchTest("!(foo|baz)bar.nim", "buzbar.nim")
+    check isMatchTest("!({foo,bar})baz.nim", "notbaz.nim")
+    check isMatchTest("!({foo,bar})baz.nim", "foobaz.nim").not
 
   test "extended (+)":
     check isMatchTest("+foo.nim", "+foo.nim")

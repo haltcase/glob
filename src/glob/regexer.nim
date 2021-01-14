@@ -129,10 +129,9 @@ proc globToRegexString* (
       if inRange:
         add('^')
       elif isNext('('):
-        fail("Negated patterns are currently not supported", pattern, i + 1)
-        # stack.add(c)
-        # add("(?!")
-        # inc i
+        stack.add(c)
+        add("(?!")
+        inc i
       else:
         add('\\' & c)
     of '?':

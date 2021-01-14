@@ -87,11 +87,8 @@ bash's ``extglob`` flag:
 ``*(...patterns)``   match zero or more occurrences of the given patterns
 ``+(...patterns)``   match one or more occurrences of the given patterns
 ``@(...patterns)``   match one of the given patterns
+``!(...patterns)``   match anything *except* the given patterns
 ===================  =====================================================
-
-Note that the ``!(...patterns)`` form that allows for matching anything *except*
-the given patterns is not currently supported. This is a limitation in the regex
-backend.
 
 Examples
 ********
