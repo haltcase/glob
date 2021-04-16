@@ -41,7 +41,7 @@ proc seqsEqual (seq1, seq2: seq[string], ignoreCase = false): bool =
 
 proc setTempDir (): () -> void =
   var dir = os.getTempDir() / "glob-"
-  for _ in .. 10:
+  for _ in 0..10:
     dir &= rand('a'..'z')
   dir.removeDir
   dir.createDir
