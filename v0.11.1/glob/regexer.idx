@@ -1,0 +1,2 @@
+GlobSyntaxError	glob/regexer.html#GlobSyntaxError	regexer: GlobSyntaxError	
+globToRegexString	glob/regexer.html#globToRegexString,string	regexer: globToRegexString(pattern: string; isDos = isDosDefault;\n                  ignoreCase = isDosDefault): string	
