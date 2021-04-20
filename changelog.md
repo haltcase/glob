@@ -1,3 +1,12 @@
+<a name="v0.11.1"></a>
+### [`v0.11.1`](https://github.com/citycide/glob/compare/v0.11.0...v0.11.1) (2021-04-19)
+
+###### BUG FIXES
+
+* remove deprecated unary slice syntax ([`cf60c6f`](https://github.com/citycide/glob/commit/cf60c6f701c819e696c88fa7d1f81e3ac1df1fbe)) ([#56](https://github.com/citycide/glob/pull/56) by [@timotheecour](https://github.com/timotheecour))
+
+---
+
 <a name="v0.11.0"></a>
 ### [`v0.11.0`](https://github.com/citycide/glob/compare/v0.10.0...v0.11.0) (2021-01-16)
 
