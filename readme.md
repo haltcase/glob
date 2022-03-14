@@ -1,4 +1,4 @@
-# glob &middot; [![nimble](https://flat.badgen.net/badge/available%20on/nimble/yellow)](https://nimble.directory/pkg/glob) ![license](https://flat.badgen.net/github/license/citycide/glob) [![GitHub Actions](https://flat.badgen.net/github/checks/citycide/glob)](https://github.com/citycide/glob/actions)
+# glob &middot; [![nimble](https://flat.badgen.net/badge/available%20on/nimble/yellow)](https://nimble.directory/pkg/glob) ![license](https://flat.badgen.net/github/license/haltcase/glob) [![GitHub Actions](https://flat.badgen.net/github/checks/haltcase/glob)](https://github.com/haltcase/glob/actions)
 
 > Match file paths against Unix style patterns called _globs_.
 
@@ -10,7 +10,7 @@ If you're unfamiliar with globs, they essentially let you use a simple language
 to describe what filenames you're looking for with wildcards, placeholders, and
 other pretty intuitive features.
 
-You can find the full [documentation here](https://citycide.github.io/glob).
+You can find the full [documentation here](https://glob.bolingen.me/).
 
 ## features
 
@@ -53,7 +53,7 @@ echo toSeq(walkGlob("src/*.nim"))
 To build `glob` from source you'll need to install [Nim][nim] and its package
 manager [Nimble][nimble].
 
-1. Clone the repo: `git clone https://github.com/citycide/glob.git`
+1. Clone the repo: `git clone https://github.com/haltcase/glob.git`
 2. Move into the newly cloned directory: `cd glob`
 3. Make your changes: `src`, `tests.nim`
 4. Run tests: `nimble test`
@@ -76,18 +76,18 @@ and create a release on GitHub.
 ## contributing
 
 This project is open to contributions of all kinds! Please check and search
-the [issues](https://github.com/citycide/glob/issues) if you encounter a
+the [issues](https://github.com/haltcase/glob/issues) if you encounter a
 problem before opening a new one. Pull requests for improvements are also
 welcome &mdash; see the steps above for [development](#development).
 
 ## license
 
-MIT © [Bo Lingen / citycide](https://github.com/citycide)
+MIT © [Bo Lingen](https://github.com/haltcase)
 
 [wiki]: https://en.wikipedia.org/wiki/Glob_(programming)
 [nim]: https://github.com/nim-lang/nim
 [nimble]: https://github.com/nim-lang/nimble
 [conventional]: https://www.conventionalcommits.org/en/v1.0.0/#summary
-[fugitive]: https://github.com/citycide/fugitive
+[fugitive]: https://github.com/haltcase/fugitive
 [semver]: https://semver.org/
-[release-wf]: https://github.com/citycide/glob/blob/master/.github/workflows/release.yml
+[release-wf]: https://github.com/haltcase/glob/blob/master/.github/workflows/release.yml
