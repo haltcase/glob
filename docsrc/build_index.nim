@@ -15,7 +15,7 @@ let releaseList = toSeq(walkDirs "*")
             <tr>
               <th>{name}</th>
               <td><a href="{name}/glob.html">documentation</a></td>
-              <td><a href="https://github.com/citycide/glob/releases/tag/{name}">release notes</a></td>
+              <td><a href="https://github.com/haltcase/glob/releases/tag/{name}">release notes</a></td>
             </tr>
     """
   )
