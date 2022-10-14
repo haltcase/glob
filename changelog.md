@@ -1,3 +1,13 @@
+<a name="v0.11.2"></a>
+### [`v0.11.2`](https://github.com/haltcase/glob/compare/v0.11.1...v0.11.2) (2022-10-14)
+
+
+###### BUG FIXES
+
+* bump regex deps version ([#58](https://github.com/haltcase/glob/pull/58))) ([`5cc3310`](https://github.com/haltcase/glob/commit/5cc331043791578e88c9c5d6d0cce0ac419dfcf5))
+
+---
+
 <a name="v0.11.1"></a>
 
 ### [`v0.11.1`](https://github.com/haltcase/glob/compare/v0.11.0...v0.11.1) (2021-04-19)
