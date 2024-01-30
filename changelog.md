@@ -1,3 +1,9 @@
+<a name="v0.11.3"></a>
+### [`v0.11.3`](https://github.com/haltcase/glob/compare/v0.11.2...v0.11.3) (2024-01-30)
+
+
+---
+
 <a name="v0.11.2"></a>
 ### [`v0.11.2`](https://github.com/haltcase/glob/compare/v0.11.1...v0.11.2) (2022-10-14)
 
