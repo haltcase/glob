@@ -334,9 +334,9 @@ proc expandGlob (pattern, root: string, ignoreCase: bool): string =
 
   return pattern
 
-func globToRegex* (pattern: string, isDos = isDosDefault, ignoreCase = isDosDefault): Regex =
+func globToRegex* (pattern: string, isDos = isDosDefault, ignoreCase = isDosDefault): Regex2 =
   ## Converts a string glob pattern to a regex pattern.
-  globToRegexString(pattern, isDos, ignoreCase).re
+  globToRegexString(pattern, isDos, ignoreCase).re2
 
 func splitPattern* (pattern: string): PatternStems =
   ## Splits the given pattern into two parts: the ``base`` which is the part
